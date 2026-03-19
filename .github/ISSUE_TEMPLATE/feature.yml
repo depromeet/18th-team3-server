@@ -1,0 +1,43 @@
+name: "✨ Feature"
+description: "새로운 기능 추가"
+title: "[FEAT] "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: 배경
+      description: 왜 이 기능이 필요한지 작성해주세요.
+      placeholder: 예) 사용자가 알림 설정을 직접 제어할 수 있도록 기능이 필요합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 설명
+      description: 구현하려는 기능을 구체적으로 작성해주세요.
+      placeholder: 예) 사용자가 알림 수신 여부를 ON/OFF 할 수 있는 API를 추가합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 완료 조건
+      description: 이 이슈가 완료되었다고 판단할 기준을 작성해주세요.
+      placeholder: |
+        - [ ] 알림 설정 조회 API 구현
+        - [ ] 알림 설정 변경 API 구현
+        - [ ] 테스트 코드 작성
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 참고 사항
+      description: 관련 문서, 기획 내용, API 명세 등이 있다면 작성해주세요.
+      placeholder: 선택 사항입니다.
+    validations:
+      required: false

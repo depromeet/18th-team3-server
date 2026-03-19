@@ -1,0 +1,43 @@
+name: "♻️ Refactor"
+description: "리팩토링"
+title: "[REFACTOR] "
+labels: ["refactor"]
+body:
+  - type: textarea
+    id: target
+    attributes:
+      label: 대상
+      description: 어떤 코드나 구조를 리팩토링하는지 작성해주세요.
+      placeholder: 예) UserService와 AuthService의 책임 분리
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: 목적
+      description: 왜 리팩토링이 필요한지 작성해주세요.
+      placeholder: 예) 서비스 책임이 과도하게 몰려 있어 유지보수가 어렵습니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: 변경 내용
+      description: 어떤 방향으로 개선할지 작성해주세요.
+      placeholder: |
+        - 비즈니스 로직 분리
+        - 중복 코드 제거
+        - 의존성 방향 정리
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 참고 사항
+      description: 영향 범위나 주의할 점이 있다면 작성해주세요.
+      placeholder: 선택 사항입니다.
+    validations:
+      required: false
