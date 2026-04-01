@@ -1,0 +1,5 @@
+#!/bin/bash
+msg=$(head -1 "$1")
+echo "$msg" | grep -qE '^(feat|fix|refactor|chore): .+' && exit 0
+echo "커밋 형식 오류: {feat|fix|refactor|chore}: <제목>" >&2
+exit 1
