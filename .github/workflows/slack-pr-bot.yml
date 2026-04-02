@@ -8,6 +8,7 @@ on:
       - review_requested
       - review_request_removed
       - edited
+      - synchronize
       - closed
 
 permissions:
@@ -399,6 +400,8 @@ jobs:
 
       - name: Reply to thread
         if: github.event.action != 'opened' && steps.find_ts.outputs.ts != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           THREAD_TS="${{ steps.find_ts.outputs.ts }}"
@@ -436,6 +439,23 @@ jobs:
             else
               TEXT="➖ 리뷰 요청이 해제되었습니다."
             fi
+          
+          elif [ "$ACTION" = "synchronize" ]; then
+            COMMITS_URL=$(jq -r '.pull_request.commits_url' "$GITHUB_EVENT_PATH")
+            COMMITS=$(curl -s \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$COMMITS_URL")
+          
+            LAST_COMMIT_MSG=$(echo "$COMMITS" | jq -r '.[-1].commit.message // ""' | head -n 1)
+            COMMIT_COUNT=$(echo "$COMMITS" | jq 'length')
+
+            if [ -n "$LAST_COMMIT_MSG" ] && [ "$LAST_COMMIT_MSG" != "null" ]; then
+              TEXT="🔄 새 커밋 추가됨 (${COMMIT_COUNT} commits)\n• ${LAST_COMMIT_MSG}"
+            else
+              TEXT="🔄 새 커밋이 추가되었습니다."
+            fi
+          
           elif [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
             TEXT="✅ PR #${{ steps.pr.outputs.pr_number }} 머지 완료: ${{ steps.pr.outputs.head_ref }} -> ${{ steps.pr.outputs.base_ref }}"
           elif [ "$ACTION" = "closed" ] && [ "$MERGED" != "true" ]; then
