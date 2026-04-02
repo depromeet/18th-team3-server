@@ -8,6 +8,7 @@ on:
       - review_requested
       - review_request_removed
       - edited
+      - synchronize
       - closed
 
 permissions:
@@ -47,7 +48,15 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
-          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
+          AUTHOR_SLACK_ID=$(echo "$SLACK_USER_MAP" | jq -r --arg login "$AUTHOR" '.[$login] // empty')
+  
+          if [ -n "$AUTHOR_SLACK_ID" ]; then
+            AUTHOR_MENTION="<@$AUTHOR_SLACK_ID>"
+          else
+            AUTHOR_MENTION="$AUTHOR"
+          fi
+  
+          echo "author=$AUTHOR_MENTION" >> "$GITHUB_OUTPUT"
           echo "action=$ACTION" >> "$GITHUB_OUTPUT"
           echo "merged=$MERGED" >> "$GITHUB_OUTPUT"
           echo "is_draft=$IS_DRAFT" >> "$GITHUB_OUTPUT"
@@ -196,12 +205,21 @@ jobs:
           REVIEWER_TEXT=$(build_reviewer_text)
           ISSUE_TEXT=$(build_issue_text "$PR_BODY")
           SUMMARY=$(build_summary "$PR_BODY")
+          
+          STATUS_LINE=""
+          if [ "${{ github.event.action }}" = "closed" ] && [ "${{ steps.pr.outputs.merged }}" = "true" ]; then
+            STATUS_LINE="✅ 머지 완료"
+          elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ steps.pr.outputs.merged }}" != "true" ]; then
+            STATUS_LINE="🗑️ 머지 없이 종료됨"
+          fi
+  
           TITLE_LINK="<${{ steps.pr.outputs.pr_url }}|#${{ steps.pr.outputs.pr_number }} ${{ steps.pr.outputs.pr_title }}>"
 
           TEXT=$(cat <<EOF
           [PR] $TITLE_LINK
-
-
+          $STATUS_LINE
+          
+          
           🔥 연관 이슈
           $ISSUE_TEXT
 
@@ -262,7 +280,7 @@ jobs:
             if [ -n "$slack_id" ]; then
               echo "<@$slack_id>"
             else
-              echo "@$github_id"
+              echo "$github_id"
             fi
           }
 
@@ -399,6 +417,8 @@ jobs:
 
       - name: Reply to thread
         if: github.event.action != 'opened' && steps.find_ts.outputs.ts != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           THREAD_TS="${{ steps.find_ts.outputs.ts }}"
@@ -436,6 +456,23 @@ jobs:
             else
               TEXT="➖ 리뷰 요청이 해제되었습니다."
             fi
+          
+          elif [ "$ACTION" = "synchronize" ]; then
+            COMMITS_URL=$(jq -r '.pull_request.commits_url' "$GITHUB_EVENT_PATH")
+            COMMITS=$(curl -s \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$COMMITS_URL")
+          
+            LAST_COMMIT_MSG=$(echo "$COMMITS" | jq -r '.[-1].commit.message // ""' | head -n 1)
+            COMMIT_COUNT=$(echo "$COMMITS" | jq 'length')
+
+            if [ -n "$LAST_COMMIT_MSG" ] && [ "$LAST_COMMIT_MSG" != "null" ]; then
+              TEXT=$(printf '🔄 새 커밋 추가됨 (%s commits)\n• %s' "$COMMIT_COUNT" "$LAST_COMMIT_MSG")
+            else
+              TEXT="🔄 새 커밋이 추가되었습니다."
+            fi
+          
           elif [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
             TEXT="✅ PR #${{ steps.pr.outputs.pr_number }} 머지 완료: ${{ steps.pr.outputs.head_ref }} -> ${{ steps.pr.outputs.base_ref }}"
           elif [ "$ACTION" = "closed" ] && [ "$MERGED" != "true" ]; then
