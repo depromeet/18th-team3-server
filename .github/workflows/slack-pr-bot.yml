@@ -49,13 +49,13 @@ jobs:
 
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           AUTHOR_SLACK_ID=$(echo "$SLACK_USER_MAP" | jq -r --arg login "$AUTHOR" '.[$login] // empty')
-  
+          
           if [ -n "$AUTHOR_SLACK_ID" ]; then
             AUTHOR_MENTION="<@$AUTHOR_SLACK_ID>"
           else
             AUTHOR_MENTION="$AUTHOR"
           fi
-  
+          
           echo "author=$AUTHOR_MENTION" >> "$GITHUB_OUTPUT"
           echo "action=$ACTION" >> "$GITHUB_OUTPUT"
           echo "merged=$MERGED" >> "$GITHUB_OUTPUT"
@@ -212,7 +212,7 @@ jobs:
           elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ steps.pr.outputs.merged }}" != "true" ]; then
             STATUS_LINE="🗑️ 머지 없이 종료됨"
           fi
-  
+          
           TITLE_LINK="<${{ steps.pr.outputs.pr_url }}|#${{ steps.pr.outputs.pr_number }} ${{ steps.pr.outputs.pr_title }}>"
 
           TEXT=$(cat <<EOF
@@ -330,7 +330,7 @@ jobs:
               echo "없음"
               return
             fi
-
+          
             while IFS= read -r issue; do
               [ -z "$issue" ] && continue
               num=$(echo "$issue" | tr -d '#')
@@ -379,11 +379,17 @@ jobs:
           REVIEWER_TEXT=$(build_reviewer_text)
           ISSUE_TEXT=$(build_issue_text "$PR_BODY")
           SUMMARY=$(build_summary "$PR_BODY")
+          STATUS_LINE=""
+          if [ "${{ github.event.action }}" = "closed" ] && [ "${{ steps.pr.outputs.merged }}" = "true" ]; then
+            STATUS_LINE="✅ 머지 완료"
+          elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ steps.pr.outputs.merged }}" != "true" ]; then
+            STATUS_LINE="🗑️ 머지 없이 종료됨"
+          fi
           TITLE_LINK="<${{ steps.pr.outputs.pr_url }}|#${{ steps.pr.outputs.pr_number }} ${{ steps.pr.outputs.pr_title }}>"
 
           TEXT=$(cat <<EOF
           [PR] $TITLE_LINK
-          
+          $STATUS_LINE
           
           🔥 *연관 이슈*
           $ISSUE_TEXT
