@@ -48,7 +48,15 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
-          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
+          AUTHOR_SLACK_ID=$(echo "$SLACK_USER_MAP" | jq -r --arg login "$AUTHOR" '.[$login] // empty')
+  
+          if [ -n "$AUTHOR_SLACK_ID" ]; then
+            AUTHOR_MENTION="<@$AUTHOR_SLACK_ID>"
+          else
+            AUTHOR_MENTION="$AUTHOR"
+          fi
+  
+          echo "author=$AUTHOR_MENTION" >> "$GITHUB_OUTPUT"
           echo "action=$ACTION" >> "$GITHUB_OUTPUT"
           echo "merged=$MERGED" >> "$GITHUB_OUTPUT"
           echo "is_draft=$IS_DRAFT" >> "$GITHUB_OUTPUT"
@@ -263,7 +271,7 @@ jobs:
             if [ -n "$slack_id" ]; then
               echo "<@$slack_id>"
             else
-              echo "@$github_id"
+              echo "$github_id"
             fi
           }
 
