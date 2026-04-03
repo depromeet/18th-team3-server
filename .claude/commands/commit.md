@@ -27,7 +27,7 @@
 
 1. `git status`와 `git diff --cached --stat`으로 staged 변경 내역 확인
 2. 변경 내역을 바탕으로 적절한 타입 선택 후 커밋 메시지 작성
-3. `Co-Authored-By` 없이 커밋 실행
+3. 커밋 실행
 4. 커밋 완료 확인
 
 $ARGUMENTS
