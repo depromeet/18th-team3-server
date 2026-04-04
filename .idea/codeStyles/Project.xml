@@ -1,0 +1,130 @@
+<component name="ProjectCodeStyleConfiguration">
+  <code_scheme name="Project" version="173">
+
+    <!-- =============================== -->
+    <!--  전역 설정                       -->
+    <!-- =============================== -->
+
+    <!-- Kotlin 공식 컨벤션: 최대 줄 길이 120자 -->
+    <option name="RIGHT_MARGIN" value="120" />
+
+    <!-- 줄 끝 개행 문자: Unix 스타일 (LF) -->
+    <option name="LINE_SEPARATOR" value="&#10;" />
+
+    <!-- =============================== -->
+    <!--  Kotlin 전용 설정                -->
+    <!-- =============================== -->
+
+    <KotlinCodeStyleSettings>
+
+      <!-- import 정렬: 공식 컨벤션 순서 -->
+      <!-- 1. 모든 import를 알파벳 순 정렬 -->
+      <!-- 2. 와일드카드 import 금지 -->
+      <option name="PACKAGES_TO_USE_STAR_IMPORTS">
+        <value />
+      </option>
+      <option name="PACKAGES_IMPORT_LAYOUT">
+        <value>
+          <package name="" withSubpackages="true" static="false" />
+          <emptyLine />
+          <package name="java" withSubpackages="true" static="false" />
+          <package name="javax" withSubpackages="true" static="false" />
+          <package name="kotlin" withSubpackages="true" static="false" />
+          <emptyLine />
+        </value>
+      </option>
+
+      <!-- Trailing comma: 멀티라인 시 마지막 요소 뒤 쉼표 자동 추가 -->
+      <option name="TRAILING_COMMA" value="true" />
+
+      <!-- 람다 화살표 앞뒤 공백 -->
+      <option name="SPACE_AROUND_LAMBDA_ARROW" value="true" />
+
+      <!-- when 화살표 앞뒤 공백 -->
+      <option name="SPACE_BEFORE_WHEN_PARENTHESES" value="true" />
+
+    </KotlinCodeStyleSettings>
+
+    <!-- =============================== -->
+    <!--  Kotlin 언어 코드 스타일         -->
+    <!-- =============================== -->
+
+    <codeStyleSettings language="kotlin">
+
+      <!-- 들여쓰기: 4 스페이스 (Kotlin 공식) -->
+      <option name="INDENT_SIZE" value="4" />
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+      <option name="TAB_SIZE" value="4" />
+      <option name="USE_TAB_CHARACTER" value="false" />
+
+      <!-- ============================= -->
+      <!--  파라미터 줄바꿈 (핵심 설정)   -->
+      <!-- ============================= -->
+
+      <!--
+        WRAP 값 의미:
+          0 = 줄바꿈 안 함
+          1 = 길면 줄바꿈
+          2 = 길면 각 항목 줄바꿈 (Chop down if long)
+          5 = 항상 각 항목 줄바꿈 (Wrap always) ← 팀 요청
+      -->
+
+      <!-- 함수 선언부 파라미터: 항상 개행 -->
+      <option name="METHOD_PARAMETERS_WRAP" value="5" />
+      <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+
+      <!-- 함수 호출부 인자: 항상 개행 -->
+      <option name="CALL_PARAMETERS_WRAP" value="5" />
+      <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="false" />
+
+      <!-- 닫는 괄호를 새 줄에 (파라미터 개행 시) -->
+      <option name="METHOD_PARAMETERS_LPAREN_ON_NEXT_LINE" value="false" />
+      <option name="METHOD_PARAMETERS_RPAREN_ON_NEXT_LINE" value="true" />
+      <option name="CALL_PARAMETERS_LPAREN_ON_NEXT_LINE" value="false" />
+      <option name="CALL_PARAMETERS_RPAREN_ON_NEXT_LINE" value="true" />
+
+      <!-- ============================= -->
+      <!--  기타 줄바꿈 설정              -->
+      <!-- ============================= -->
+
+      <!-- 체이닝 메서드: 길면 줄바꿈 -->
+      <option name="METHOD_CALL_CHAIN_WRAP" value="2" />
+      <option name="WRAP_FIRST_METHOD_IN_CALL_CHAIN" value="true" />
+
+      <!-- when 조건: 길면 줄바꿈 -->
+      <option name="ASSIGNMENT_WRAP" value="1" />
+
+      <!-- 이진 연산자: 길면 줄바꿈 -->
+      <option name="BINARY_OPERATION_WRAP" value="1" />
+      <option name="BINARY_OPERATION_SIGN_ON_NEXT_LINE" value="true" />
+
+      <!-- ============================= -->
+      <!--  공백 설정                     -->
+      <!-- ============================= -->
+
+      <!-- 제어문 키워드 뒤 공백: if (, for (, while ( -->
+      <option name="SPACE_BEFORE_IF_PARENTHESES" value="true" />
+      <option name="SPACE_BEFORE_FOR_PARENTHESES" value="true" />
+      <option name="SPACE_BEFORE_WHILE_PARENTHESES" value="true" />
+      <option name="SPACE_BEFORE_WHEN_PARENTHESES" value="true" />
+
+      <!-- 단항 연산자 앞뒤 공백 없음 -->
+      <option name="SPACE_AROUND_UNARY_OPERATOR" value="false" />
+
+      <!-- ============================= -->
+      <!--  빈 줄 설정                    -->
+      <!-- ============================= -->
+
+      <!-- 클래스 내 최대 연속 빈 줄: 1 -->
+      <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="1" />
+
+      <!-- 코드 내 최대 연속 빈 줄: 1 -->
+      <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
+
+      <!-- 닫는 중괄호 앞 빈 줄 제거 -->
+      <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
+
+    </codeStyleSettings>
+
+  </code_scheme>
+</component>
