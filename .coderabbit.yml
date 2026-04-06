@@ -1,0 +1,257 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: "ko-KR"
+
+tone_instructions: "
+  당신은 시니어 백엔드 개발자 입니다. 목표는 디프만 3팀 백엔드 개발자들의 코드 품질을 개선하며 성장하도록 돕는 것입니다.
+  1. 피드백은 명확하고 구체적이어야 하며, 문제의 원인과 개선 방법을 제시하세요.
+  2. 리뷰는 교육적이어야 하며, 관련 개념이나 공식 문서를 함께 추천해주세요.
+  3. 비판보다는 개선 중심의 제안을 우선하세요.
+  4. 칭찬은 짧고 위트 있게 작성하세요.
+  "
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+
+  high_level_summary: true
+  changed_files_summary: true
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: true
+  poem: false
+
+  assess_linked_issues: true
+  related_issues: false
+  related_prs: false
+
+  suggested_labels: false
+  auto_apply_labels: false
+  suggested_reviewers: false
+  auto_assign_reviewers: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+    ignore_title_keywords:
+      - "WIP"
+      - "[WIP]"
+      - "DO NOT REVIEW"
+      - "DRAFT"
+    # PR merge 대상(base)
+    # feature -> develop (o)
+    # develop -> release (x)
+    # release -> main (현재는 o, 세팅완료 후 x, 노이즈 이슈)
+    base_branches:
+      - main
+      - develop
+
+  pre_merge_checks:
+    title:
+      mode: warning
+      requirements: |
+        Conventional Commits 형식: <type>(선택 scope): <한 줄 요약>
+        type 예: feat, fix, chore, refactor, docs, test, ci, build 등.
+        콜론 뒤 요약은 명령형·짧게(대략 72자 이내 권장). 예: chore: PR 템플릿 STAR 구조로 변경
+    description:
+      mode: warning
+    issue_assessment:
+      mode: off
+
+  path_filters:
+    - "!**/build/**"
+    - "!**/out/**"
+    - "!**/target/**"
+    - "!**/.gradle/**"
+    - "!**/node_modules/**"
+    - "!**/.idea/**"
+    - "!**/*.iml"
+    - "!**/generated/**"
+    - "!**/dist/**"
+    - "!**/coverage/**"
+    - "!**/.DS_Store"
+
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        저장소 전역 리뷰 톤(상세). Java + Kotlin + Spring Boot + JPA 백엔드입니다.
+
+        [리뷰 원칙]
+        - 모든 리뷰는 한국어로 작성해주세요.
+        - 칭찬보다 실제 수정 가치가 있는 문제를 우선 지적해주세요.
+        - 사소한 스타일 취향이나 포맷팅보다 장애 가능성, 정합성, 성능, 보안, 운영 리스크를 우선 검토해주세요.
+        - 영향도가 낮은 코멘트는 남기지 마세요.
+        - 가장 중요한 문제만 선택해서 짧고 명확하게 설명하세요.
+        - 문제를 지적할 때는 "왜 문제인지", "어떤 상황에서 터지는지", "어떻게 고치는지"를 함께 설명해주세요.
+        - 수정이 필요하면 가능하면 Kotlin 코드 예시를 포함해주세요.
+        - 애매한 취향 차이는 지적하지 말고, 실제 운영상 위험하거나 유지보수 비용이 커지는 경우에만 코멘트해주세요.
+        - 같은 내용을 반복하지 말고, 가장 영향도가 큰 문제부터 짧고 단호하게 말해주세요.
+
+        [가장 우선해서 볼 것]
+        1. 데이터 정합성 — 트랜잭션 범위, 동시성(race, lost update), 상태 변경 원자성
+        2. JPA/DB 성능 — N+1, flush/save, fetch, 반복문 내 쿼리, 페이징·정렬·인덱스
+        3. API 안정성 — 검증, 인증/인가, 예외→HTTP, 응답 노출, 하위호환
+        4. 운영 리스크 — 민감 로그, 외부 API 타임아웃/재시도, 설정 영향, null
+        5. 테스트 — 빠진 분기·회귀 못 잡는 구조 지적 및 구체적 제안
+
+        [지양할 것]
+        네이밍 취향, 포맷만, 과한 일반론, 디자인 패턴 강요, 근거 없는 리팩토링 권유
+
+        [PR 워크스루 형식]
+        - 변경 요약은 마크다운 표(구분 | 파일/위치 | 변경 요약) 우선
+        - API·비즈니스·호출 흐름이 핵심이면 시퀀스 다이어그램 보완
+        - 인프라·워크플로만 바뀌면 표·목록 위주
+
+    - path: "src/main/java/**"
+      instructions: |
+        Java 백엔드 코드입니다. 모듈 예: …/controller, …/dto, …/repository, …/service(·impl), …/domain.
+        아래를 엄격히 검토해주세요.
+
+        - Controller / Service / Repository / Domain 계층 책임이 명확한지
+        - 비즈니스 로직이 Controller에 들어가 있지 않은지
+        - @Transactional 위치와 범위가 적절한지
+        - readOnly=true를 써야 할 조회성 로직이 아닌지
+        - 반복문 안에서 repository 호출이 발생하지 않는지
+        - JPA 엔티티 변경 감지에 의존하는 코드가 의도대로 동작하는지
+        - Optional, null, 빈 컬렉션 처리 누락이 없는지
+        - 외부 API/모듈 호출 실패 시 예외 처리와 롤백 기준이 적절한지
+        - 로그에 민감정보가 남지 않는지
+        - 회귀 위험이 큰데 테스트가 없는 경우 구체적인 테스트 케이스를 제안해주세요
+
+    - path: "src/main/kotlin/**"
+      instructions: |
+        Kotlin 백엔드 코드입니다. 모듈 예: …/controller, …/dto, …/repository, …/service(·impl), …/domain.
+        아래를 엄격히 검토해주세요.
+
+        - nullable 처리 안전성
+        - !! 사용이 꼭 필요한지
+        - let / run / apply / also 남용으로 가독성이 무너지지 않았는지
+        - data class, sealed class, extension function 사용이 적절한지
+        - Java 코드와 혼용 시 null-safety가 깨지지 않는지
+        - Spring/JPA 프록시와 Kotlin 특성 충돌 가능성이 없는지
+        - 비동기 또는 suspend 사용 시 블로킹 호출이 섞이지 않았는지
+        - 로직상 예외 처리와 상태 변경 타이밍이 안전한지
+
+    - path: "**/domain/**/*.java"
+      instructions: |
+        `domain` 패키지(예: user/domain/)의 Java입니다. 파일명이 *Entity가 아니어도 JPA 엔티티·도메인 모델로 간주하고 엄격히 검토해주세요.
+
+        - equals/hashCode 구현이 엔티티 특성에 맞는지
+        - 연관관계 방향과 fetch 전략이 적절한지
+        - toString 에 연관 객체를 포함해 순환 참조/과도한 로딩이 발생하지 않는지
+        - setter 남용으로 무분별한 상태 변경이 가능하지 않은지
+        - 생성/수정 책임이 엔티티 내부 메서드로 적절히 캡슐화되어 있는지
+        - 컬렉션 초기화, orphanRemoval, cascade 설정이 위험하지 않은지
+
+    - path: "**/domain/**/*.kt"
+      instructions: |
+        `domain` 패키지(예: user/domain/)의 Kotlin입니다. 파일명이 *Entity가 아니어도 JPA 엔티티·도메인 모델로 간주하고 엄격히 검토해주세요.
+
+        - JPA 프록시와 data class 사용 충돌 가능성이 없는지
+        - 기본 생성자, open 여부, final 클래스 문제 가능성이 없는지
+        - 연관관계 지연 로딩이 안전하게 동작하는지
+        - 엔티티가 불변처럼 보이지만 실제로는 깨질 수 있는 구조는 아닌지
+        - equals/hashCode/toString 으로 인한 부작용이 없는지
+
+    - path: "**/*Repository.java"
+      instructions: |
+        Repository 계층입니다.
+
+        - 메서드명이 실제 쿼리 의도와 맞는지
+        - exists/count/find 사용이 목적에 맞는지
+        - 페이징/정렬이 안정적인지
+        - N+1 또는 불필요한 연관 객체 로딩 가능성이 없는지
+        - JPQL/QueryDSL/native query가 불필요하게 무겁지 않은지
+        - 단건 조회여야 하는데 리스트를 가져오거나, 반대로 exists면 충분한데 전체를 조회하는 식의 낭비가 없는지
+
+    - path: "**/*Repository.kt"
+      instructions: |
+        Kotlin Repository 계층입니다.
+
+        - Java Repository 기준과 동일하게 성능과 조회 목적 적합성을 엄격히 검토해주세요.
+        - nullable 반환과 컬렉션 반환이 호출부에서 안전하게 처리되는지도 함께 봐주세요.
+
+    - path: "**/*Service.java"
+      instructions: |
+        Service 계층입니다. 가장 엄격하게 검토해주세요.
+
+        - 유스케이스 단위 책임이 명확한지
+        - 메서드가 너무 많은 일을 하지 않는지
+        - 상태 변경과 외부 호출의 순서가 안전한지
+        - 트랜잭션 안에서 외부 API 호출을 해 잠재적 장애 전파나 락 점유 시간이 길어지지 않는지
+        - 중복 발급/중복 저장/중복 요청 방지 로직이 필요한지
+        - 도메인 규칙이 여러 서비스에 중복되지 않는지
+
+    - path: "**/*Service.kt"
+      instructions: |
+        Kotlin Service 계층입니다. Java Service와 동일하게 엄격히 검토해주세요.
+        추가로 scope function 남용, nullable 처리 실수, 지나치게 축약된 표현으로 인한 가독성 저하도 함께 봐주세요.
+
+    - path: "**/*Controller.java"
+      instructions: |
+        API Controller입니다.
+
+        - Request DTO validation 누락 여부
+        - 인증/인가 체크 필요성
+        - Response가 엔티티를 직접 노출하지 않는지
+        - 예외가 적절한 HTTP status로 변환되는지
+        - 멱등성이 필요한 API인지
+        - 잘못된 파라미터에서 500이 아닌 4xx로 안전하게 처리되는지
+
+    - path: "**/*Controller.kt"
+      instructions: |
+        Kotlin Controller입니다. Java Controller 기준과 동일하게 검토해주세요.
+
+    - path: "src/main/resources/**"
+      instructions: |
+        설정 파일입니다.
+
+        - 민감정보 하드코딩 여부
+        - 운영/개발 설정 혼재 여부
+        - 커넥션 풀, 타임아웃, 로그 레벨, 캐시 관련 설정이 과도하거나 위험하지 않은지
+        - 기능 변경보다 운영 동작을 바꾸는 설정이면 그 영향도를 지적해주세요
+
+    - path: "src/test/**"
+      instructions: |
+        테스트 코드입니다.
+
+        - 핵심 비즈니스 규칙, 예외 케이스, 경계값 검증이 충분한지
+        - Mock 남용으로 실제 회귀를 못 잡는 테스트인지
+        - 통합 테스트가 필요한데 단위 테스트만 있는지
+        - 테스트 이름만 번지르르하고 실질 검증이 약하지 않은지
+        - 실패해야 할 상황을 제대로 검증하는지
+        - 동시성, 중복 요청, 트랜잭션 롤백 같은 위험 시나리오 테스트가 필요한 변경인지 검토해주세요
+
+    - path: ".github/workflows/**"
+      instructions: |
+        GitHub Actions 워크플로우 파일입니다. 아래를 중점적으로 검토해주세요.
+
+        - trigger(on: pull_request, push, workflow_dispatch)가 의도와 맞는지
+        - opened, synchronize, edited 등 이벤트 조합이 중복 실행이나 노이즈를 만들지 않는지
+        - permissions 가 최소 권한 원칙을 지키는지
+        - secrets 사용이 안전한지, 로그에 노출될 가능성이 없는지
+        - concurrency 설정이 필요한 워크플로우인지
+        - 조건문(if), branch filter, paths filter가 실제 운영 의도와 맞는지
+        - 중복 실행, 무한 루프, 자기 자신을 다시 트리거하는 구조가 없는지
+        - Slack/외부 API 호출 실패 시 전체 workflow를 불필요하게 실패시키지 않는지
+        - PR 알림/리뷰/배포 workflow가 서로 중복 코멘트나 중복 알림을 만들지 않는지
+        - checkout, cache, artifact, upload/download 단계가 불필요하게 무겁지 않은지
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: false
+  learnings:
+    scope: local
+  issues:
+    scope: local
+  pull_requests:
+    scope: local
+
+early_access: true
+enable_free_tier: true
