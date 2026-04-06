@@ -31,7 +31,7 @@
 
 ## 절차
 
-1. `git status`와 `git diff`로 전체 변경 내역 확인
+1. `git status`와 `git diff HEAD`로 전체 변경 내역 확인 (staged + unstaged 모두 포함)
 2. 커밋 분리 원칙에 따라 변경 내역을 논리적 단위로 분류
 3. 각 단위별로 해당 파일만 `git add` → 커밋 메시지 작성 → 커밋
 4. 모든 커밋 완료 후 `git log`로 확인
