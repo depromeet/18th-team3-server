@@ -4,7 +4,6 @@ on:
   pull_request:
     types:
       - opened
-      - ready_for_review
       - review_requested
       - review_request_removed
       - edited
@@ -16,10 +15,14 @@ permissions:
   pull-requests: write
   issues: write
 
+# 레이스 방지용 concurrency
+concurrency:
+  group: slack-pr-bot-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   notify-slack:
     runs-on: ubuntu-latest
-    environment: PR-Bot
     env:
       SLACK_USER_MAP: '{"m-a-king":"U0AKAEF2K9U","1o18z":"U0AKQ6G8BT3","sevin98":"U0AK6U2J62F"}'
 
@@ -89,12 +92,7 @@ jobs:
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
 
       - name: Post parent message
-        if: |
-          steps.find_ts.outputs.ts == '' &&
-          (
-            (github.event.action == 'opened' && github.event.pull_request.draft == false) ||
-            github.event.action == 'ready_for_review'
-          )
+        if: steps.find_ts.outputs.ts == '' && github.event.action == 'opened' && github.event.pull_request.draft == false
         id: post_parent
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -194,11 +192,35 @@ jobs:
 
           build_summary() {
             local pr_body="$1"
-            local summary
-
-            summary=$(echo "$pr_body" | grep -E '^- ' | head -n 1 | sed 's/^- //')
-            [ -z "$summary" ] && summary="요약 없음"
-            echo "$summary"
+            printf '%s\n' "$pr_body" | awk '
+              BEGIN { in_task=0; n=0; out="" }
+              /^##/ {
+                if (in_task == 1) exit
+                r = $0
+                sub(/^##[[:space:]]+/, "", r)
+                ok = (match(r, /^[Tt][Aa][Ss][Kk]([^A-Za-z]|$)/) || match(r, /[[:space:]][Tt][Aa][Ss][Kk]([^A-Za-z]|$)/))
+                if (ok) { in_task=1; next }
+                next
+              }
+              in_task == 1 && /^##/ { exit }
+              in_task == 1 {
+                s = $0
+                sub(/^[[:space:]]+/, "", s)
+                if (s ~ /^>/) next
+                if (s ~ /^-[[:space:]]*\[[[:space:]xX]\]/) next
+                if (s ~ /^-[[:space:]]+/) {
+                  sub(/^-[[:space:]]+/, "", s)
+                  if (length(s) > 0) {
+                    if (n++ > 0) out = out "\n"
+                    out = out "• " s
+                  }
+                }
+              }
+              END {
+                if (n > 0) print out
+                else print "요약 없음"
+              }
+            '
           }
 
           PR_BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
@@ -366,11 +388,35 @@ jobs:
 
           build_summary() {
             local pr_body="$1"
-            local summary
-
-            summary=$(echo "$pr_body" | grep -E '^- ' | head -n 1 | sed 's/^- //')
-            [ -z "$summary" ] && summary="요약 없음"
-            echo "$summary"
+            printf '%s\n' "$pr_body" | awk '
+              BEGIN { in_task=0; n=0; out="" }
+              /^##/ {
+                if (in_task == 1) exit
+                r = $0
+                sub(/^##[[:space:]]+/, "", r)
+                ok = (match(r, /^[Tt][Aa][Ss][Kk]([^A-Za-z]|$)/) || match(r, /[[:space:]][Tt][Aa][Ss][Kk]([^A-Za-z]|$)/))
+                if (ok) { in_task=1; next }
+                next
+              }
+              in_task == 1 && /^##/ { exit }
+              in_task == 1 {
+                s = $0
+                sub(/^[[:space:]]+/, "", s)
+                if (s ~ /^>/) next
+                if (s ~ /^-[[:space:]]*\[[[:space:]xX]\]/) next
+                if (s ~ /^-[[:space:]]+/) {
+                  sub(/^-[[:space:]]+/, "", s)
+                  if (length(s) > 0) {
+                    if (n++ > 0) out = out "\n"
+                    out = out "• " s
+                  }
+                }
+              }
+              END {
+                if (n > 0) print out
+                else print "요약 없음"
+              }
+            '
           }
 
           CHANNEL_ID="${{ steps.find_ts.outputs.channel }}"
@@ -446,9 +492,7 @@ jobs:
 
           TEXT=""
 
-          if [ "$ACTION" = "ready_for_review" ]; then
-            TEXT="👀 Draft 해제됨. 리뷰 가능한 상태입니다."
-          elif [ "$ACTION" = "review_requested" ]; then
+          if [ "$ACTION" = "review_requested" ]; then
             REQUESTED_REVIEWER=$(jq -r '.requested_reviewer.login // ""' "$GITHUB_EVENT_PATH")
             if [ -n "$REQUESTED_REVIEWER" ]; then
               TEXT="🙋 리뷰 요청됨: $(mention_slack_user "$REQUESTED_REVIEWER")"
