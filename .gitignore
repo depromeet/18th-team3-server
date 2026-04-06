@@ -7,3 +7,10 @@
 .idea/tasks.xml
 .idea/shelf/
 *.iml
+
+# Gradle
+.gradle/
+build/
+
+# Kotlin
+.kotlin/
