@@ -9,8 +9,8 @@ data class OcrResponse(
     val category: ExtractedFieldResponse<String>?,
 ) {
     /**
-     * boundingBox는 0~1000 정규화된 좌표(ymin, xmin, ymax, xmax).
-     * boundingBox가 null이면 추론된 값(이미지에서 직접 읽은 것이 아님).
+     * boundingBox 는 0~1000 정규화된 좌표(yMin, xMin, yMax, xMax).
+     * boundingBox 가 비어 있으면 추론된 값(이미지에서 직접 읽은 것이 아님).
      */
     data class ExtractedFieldResponse<T>(
         val value: T,
@@ -19,10 +19,10 @@ data class OcrResponse(
     )
 
     data class BoundingBoxResponse(
-        val ymin: Int,
-        val xmin: Int,
-        val ymax: Int,
-        val xmax: Int,
+        val yMin: Int,
+        val xMin: Int,
+        val yMax: Int,
+        val xMax: Int,
     )
 
     companion object {
@@ -42,10 +42,10 @@ data class OcrResponse(
             is Field.Extracted -> ExtractedFieldResponse(
                 value = value,
                 boundingBox = BoundingBoxResponse(
-                    ymin = boundingBox.yMin,
-                    xmin = boundingBox.xMin,
-                    ymax = boundingBox.yMax,
-                    xmax = boundingBox.xMax,
+                    yMin = boundingBox.yMin,
+                    xMin = boundingBox.xMin,
+                    yMax = boundingBox.yMax,
+                    xMax = boundingBox.xMax,
                 ),
                 isInferred = false,
             )
