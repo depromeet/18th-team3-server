@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile
 
 @Service
 class OcrService(
-    private val ocrClient: OcrClient
+    private val ocrClient: OcrClient,
 ) {
     fun extract(image: MultipartFile): Product {
         val mimeType = image.contentType ?: throw IllegalArgumentException("이미지 타입이 지정되지 않았습니다.")

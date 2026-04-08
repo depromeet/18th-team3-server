@@ -39,6 +39,7 @@ data class OcrResponse(
                 boundingBox = null,
                 isInferred = true,
             )
+
             is Field.Extracted -> ExtractedFieldResponse(
                 value = value,
                 boundingBox = BoundingBoxResponse(

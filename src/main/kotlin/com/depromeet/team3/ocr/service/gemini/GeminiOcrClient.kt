@@ -34,7 +34,7 @@ class GeminiOcrClient(
 
         val request = GeminiOcrRequest.forImageAnalysis(
             base64Image,
-            mimeType
+            mimeType,
         )
 
         // TODO: Gemini API 가 간헐적으로 503(ServiceUnavailable) 을 반환함. 재시도 로직 필요.

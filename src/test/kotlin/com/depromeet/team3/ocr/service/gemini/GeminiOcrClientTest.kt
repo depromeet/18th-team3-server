@@ -25,7 +25,9 @@ class GeminiOcrClientTest(
 
     @Test
     fun `이미지에서 상품 정보를 추출한다`() {
-        val imageBytes = javaClass.getResourceAsStream("/test-product.png")?.readAllBytes()
+        val imageBytes = javaClass
+            .getResourceAsStream("/test-product.png")
+            ?.readAllBytes()
             ?: throw IllegalStateException("src/test/resources/test-product.png 파일을 준비해주세요.")
 
         val product = geminiOcrClient.analyzeImage(imageBytes, "image/png")

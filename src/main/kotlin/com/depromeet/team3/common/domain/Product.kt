@@ -16,7 +16,7 @@ data class Product(
         data object NotFound : Field<Nothing>
 
         data class Inferred<T>(
-            val value: T
+            val value: T,
         ) : Field<T>
 
         data class Extracted<T>(
