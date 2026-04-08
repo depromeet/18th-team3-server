@@ -8,7 +8,7 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
-import java.util.*
+import java.util.Base64
 
 @Component
 class GeminiOcrClient(
