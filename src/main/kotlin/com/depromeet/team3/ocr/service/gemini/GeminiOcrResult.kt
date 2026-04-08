@@ -6,6 +6,7 @@ import com.depromeet.team3.common.domain.Product.Field
 
 /**
  * Gemini가 responseSchema에 따라 생성하는 JSON 문자열을 역직렬화한 결과.
+ * <p>
  * 단일 상품만 받도록 스키마(PRODUCT_SCHEMA)를 OBJECT 타입으로 정의했음.
  */
 data class GeminiOcrResult(
@@ -22,10 +23,10 @@ data class GeminiOcrResult(
         category = toField(category, categoryBoundingBox),
     )
 
-    private fun <T : Any> toField(value: T?, box: GeminiBoundingBox?): Field<T> = when {
-        value == null -> Field.NotFound
-        box == null -> Field.Inferred(value)
-        else -> Field.Extracted(value, box.toBoundingBox())
+    private fun <T : Any> toField(value: T?, box: GeminiBoundingBox?): Field<T> {
+        value ?: return Field.NotFound
+        box ?: return Field.Inferred(value)
+        return Field.Extracted(value, box.toBoundingBox())
     }
 
     data class GeminiBoundingBox(
