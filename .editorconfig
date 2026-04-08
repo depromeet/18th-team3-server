@@ -1,0 +1,73 @@
+# 프로젝트 전역 코드 스타일 (https://editorconfig.org/)
+#
+# [중요] 이 파일이 소스 오브 트루스.
+#   IntelliJ 는 .idea/codeStyles/Project.xml 을 저장할 때 주석을 제거하고
+#   자체 형식으로 재작성하므로, 사람이 읽을 수 있는 규칙은 모두 여기에 둔다.
+#   IntelliJ 는 .editorconfig 설정을 Project.xml 보다 우선 적용한다.
+#
+# 변경 방법: 이 파일만 수정하고 IDE 를 재시작하거나
+#            "Invalidate Caches / Restart" > "Clear file system cache" 실행.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{kt,kts}]
+indent_size = 4
+continuation_indent_size = 4
+max_line_length = 120
+
+# --- Kotlin 공식 스타일 기본값 ---
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+
+# --- 들여쓰기 핵심: 체이닝 호출을 이중 들여쓰기(continuation) 하지 않음 ---
+# 이 설정이 false 여야 .builder() 가 8칸이 아닌 4칸으로 들여써진다.
+ij_kotlin_continuation_indent_for_chained_calls = false
+ij_kotlin_continuation_indent_in_argument_lists = false
+ij_kotlin_continuation_indent_in_parameter_lists = false
+
+# --- 파라미터 선언/호출: 길면 "항상 각 항목을 새 줄에" ---
+# 값 매핑: off=0, normal=1, split_into_lines=2, on_every_item=5
+ij_kotlin_method_parameters_wrap = on_every_item
+ij_kotlin_call_parameters_wrap = on_every_item
+ij_kotlin_method_parameters_new_line_after_left_paren = true
+ij_kotlin_method_parameters_right_paren_on_new_line = true
+ij_kotlin_call_parameters_new_line_after_left_paren = true
+ij_kotlin_call_parameters_right_paren_on_new_line = true
+ij_kotlin_align_multiline_parameters = false
+ij_kotlin_align_multiline_parameters_in_calls = false
+
+# --- 체이닝: 길면 각 호출을 새 줄에, 첫 호출도 새 줄로 ---
+ij_kotlin_method_call_chain_wrap = split_into_lines
+ij_kotlin_wrap_first_method_in_call_chain = true
+
+# --- Import ---
+# 와일드카드 import 금지, 공식 컨벤션 순서
+ij_kotlin_packages_to_use_import_on_demand = unset
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_imports_layout = *, java.**, javax.**, kotlin.**, ^
+
+# --- Trailing comma ---
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+
+# --- 공백 ---
+ij_kotlin_space_around_lambda_arrow = true
+ij_kotlin_space_before_when_parentheses = true
+ij_kotlin_space_after_unary_operator = false
+
+# --- 이진 연산자/할당 줄바꿈 ---
+ij_kotlin_binary_operation_wrap = normal
+ij_kotlin_binary_operation_sign_on_next_line = true
+ij_kotlin_assignment_wrap = normal
+
+# --- 빈 줄 ---
+ij_kotlin_keep_blank_lines_in_declarations = 1
+ij_kotlin_keep_blank_lines_in_code = 1
+ij_kotlin_keep_blank_lines_before_right_brace = 0
