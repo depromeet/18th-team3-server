@@ -46,12 +46,9 @@ class GeminiOcrClient(
             .uri {
                 it
                     .path("/v1beta/models/{model}:generateContent")
-                    .queryParam(
-                        "key",
-                        geminiProperties.apiKey
-                    )
                     .build(geminiProperties.model)
             }
+            .header(GEMINI_API_KEY_HEADER, geminiProperties.apiKey)
             .contentType(MediaType.APPLICATION_JSON)
             .body(request)
             .retrieve()
@@ -63,6 +60,10 @@ class GeminiOcrClient(
     }
 
     companion object {
+        // API 키를 URL 쿼리파라미터 대신 헤더로 전달해 access log 등에 키가 남지 않도록 함.
+        // https://ai.google.dev/gemini-api/docs/api-key#provide-api-key-explicitly
+        private const val GEMINI_API_KEY_HEADER = "x-goog-api-key"
+
         // https://ai.google.dev/gemini-api/docs/vision
         private val SUPPORTED_MIME_TYPES = setOf(
             "image/png",
