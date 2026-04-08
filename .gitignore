@@ -12,5 +12,8 @@
 .gradle/
 build/
 
+# Environment
+.env
+
 # Kotlin
 .kotlin/

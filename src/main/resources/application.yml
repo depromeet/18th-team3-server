@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: team3
+  config:
+    import: optional:file:.env[.properties]
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: gemini-2.5-flash
