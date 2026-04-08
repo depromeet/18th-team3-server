@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: team3-test
+
+gemini:
+  # 통합 테스트는 @EnabledIfEnvironmentVariable 로 실제 키 존재 시에만 실행됨.
+  # 일반 컨텍스트 로드 테스트에서는 dummy 값으로 기동 검증만 통과시킨다.
+  api-key: ${GEMINI_API_KEY:test-dummy-key}
+  model: gemini-2.5-flash
