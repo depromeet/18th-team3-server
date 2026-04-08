@@ -37,6 +37,10 @@ class GeminiOcrClient(
             mimeType
         )
 
+        // TODO: Gemini API 가 간헐적으로 503(ServiceUnavailable) 을 반환함. 재시도 로직 필요.
+        //       - 대상: 5xx 및 네트워크 타임아웃
+        //       - 방식: 지수 백오프 + 최대 N회 (e.g. Resilience4j Retry 또는 RestClient interceptor)
+        //       - 주의: 4xx (ex. 잘못된 API 키, 지원하지 않는 mimeType) 는 재시도 대상에서 제외
         val response = restClient
             .post()
             .uri {

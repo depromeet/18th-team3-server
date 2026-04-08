@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
 //@Disabled("실제 Gemini API를 호출하는 테스트. API 키 설정 후 수동 실행.")
+// NOTE: Gemini API 가 간헐적으로 503 을 반환해 이 테스트가 불안정할 수 있음.
+//       프로덕션 코드에 재시도 로직이 들어가면 이 테스트도 재시도를 검증하도록 보강할 것.
 @SpringBootTest
 class GeminiOcrClientTest(
     @Autowired private val geminiOcrClient: GeminiOcrClient,
