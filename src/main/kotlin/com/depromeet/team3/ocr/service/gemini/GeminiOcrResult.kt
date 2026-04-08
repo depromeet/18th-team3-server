@@ -3,6 +3,7 @@ package com.depromeet.team3.ocr.service.gemini
 import com.depromeet.team3.common.domain.BoundingBox
 import com.depromeet.team3.common.domain.Product
 import com.depromeet.team3.common.domain.Product.Field
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * Gemini가 responseSchema에 따라 생성하는 JSON 문자열을 역직렬화한 결과.
@@ -30,16 +31,16 @@ data class GeminiOcrResult(
     }
 
     data class GeminiBoundingBox(
-        val ymin: Int,
-        val xmin: Int,
-        val ymax: Int,
-        val xmax: Int,
+        @JsonProperty("ymin") val yMin: Int,
+        @JsonProperty("xmin") val xMin: Int,
+        @JsonProperty("ymax") val yMax: Int,
+        @JsonProperty("xmax") val xMax: Int,
     ) {
         fun toBoundingBox() = BoundingBox(
-            yMin = ymin,
-            xMin = xmin,
-            yMax = ymax,
-            xMax = xmax,
+            yMin = yMin,
+            xMin = xMin,
+            yMax = yMax,
+            xMax = xMax,
         )
     }
 }
