@@ -598,7 +598,7 @@ jobs:
             --data "$(jq -n \
               --arg channel "${{ secrets.SLACK_CHANNEL_ID }}" \
               --arg text "$TEXT" \
-              '{channel:$channel,text:$text,unfurl_links:false}')")
+              '{channel:$channel,text:$text,blocks:[{type:"section",text:{type:"mrkdwn",text:$text}}],unfurl_links:false}')")
 
           OK=$(echo "$RESP" | jq -r '.ok')
           if [ "$OK" != "true" ]; then
