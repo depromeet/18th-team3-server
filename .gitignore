@@ -12,8 +12,12 @@
 .gradle/
 build/
 
+# IntelliJ 컴파일 출력
+out/
+
 # Environment
 .env
+.env.test
 
 # Kotlin
 .kotlin/
