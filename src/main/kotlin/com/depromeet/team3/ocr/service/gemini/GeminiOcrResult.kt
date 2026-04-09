@@ -26,21 +26,23 @@ data class GeminiOcrResult(
 
     private fun <T : Any> toField(value: T?, box: GeminiBoundingBox?): Field<T> {
         value ?: return Field.NotFound
-        box ?: return Field.Inferred(value)
-        return Field.Extracted(value, box.toBoundingBox())
+        val boundingBox = box?.toBoundingBoxOrNull() ?: return Field.Inferred(value)
+        return Field.Extracted(value, boundingBox)
     }
 
+    /**
+     * Gemini 응답의 bounding box. 스키마로 non-null 을 강제하긴 하지만,
+     * 모델이 스키마를 100% 준수한다는 보장이 없고 부분 필드 누락/타입 깨짐이
+     * 발생하면 전체 역직렬화가 실패할 수 있으므로 모든 필드를 nullable 로 받는다.
+     * 유효성 검증과 도메인 객체 변환은 [toBoundingBoxOrNull] 에서 수행.
+     */
     data class GeminiBoundingBox(
-        @JsonProperty("ymin") val yMin: Int,
-        @JsonProperty("xmin") val xMin: Int,
-        @JsonProperty("ymax") val yMax: Int,
-        @JsonProperty("xmax") val xMax: Int,
+        @JsonProperty("ymin") val yMin: Int?,
+        @JsonProperty("xmin") val xMin: Int?,
+        @JsonProperty("ymax") val yMax: Int?,
+        @JsonProperty("xmax") val xMax: Int?,
     ) {
-        fun toBoundingBox() = BoundingBox(
-            yMin = yMin,
-            xMin = xMin,
-            yMax = yMax,
-            xMax = xMax,
-        )
+        fun toBoundingBoxOrNull(): BoundingBox? =
+            BoundingBox.ofOrNull(yMin = yMin, xMin = xMin, yMax = yMax, xMax = xMax)
     }
 }
