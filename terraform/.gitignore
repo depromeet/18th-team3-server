@@ -1,0 +1,24 @@
+# Local .terraform directories
+.terraform/
+# Note: .terraform.lock.hcl is intentionally committed (provider version lock).
+
+# State files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Sensitive variable values
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# CLI config
+.terraformrc
+terraform.rc
+
+# Plan output
+*.tfplan
