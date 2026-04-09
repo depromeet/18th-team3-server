@@ -1,62 +1,19 @@
 name: "🐞 Bug"
 description: "버그 제보"
-title: "[BUG] "
 labels: ["bug"]
 body:
   - type: textarea
-    id: description
+    id: why
     attributes:
-      label: 설명
-      description: 발생한 문제를 구체적으로 작성해주세요.
-      placeholder: 예) 로그인 API 호출 시 500 에러가 발생합니다.
+      label: 왜
+      description: 증상, 재현 절차
     validations:
       required: true
 
   - type: textarea
-    id: steps
+    id: what
     attributes:
-      label: 재현 방법
-      description: 버그를 재현하는 절차를 순서대로 작성해주세요.
-      placeholder: |
-        1. 로그인 페이지 진입
-        2. 이메일/비밀번호 입력
-        3. 로그인 버튼 클릭
-        4. 500 에러 발생
+      label: 무엇을
+      description: 기대 동작, 예상 범위
     validations:
       required: true
-
-  - type: textarea
-    id: expected
-    attributes:
-      label: 기대 동작
-      description: 원래 기대했던 동작을 작성해주세요.
-      placeholder: 예) 정상적으로 로그인되어 메인 페이지로 이동해야 합니다.
-    validations:
-      required: true
-
-  - type: textarea
-    id: actual
-    attributes:
-      label: 실제 동작
-      description: 실제로 어떤 문제가 발생했는지 작성해주세요.
-      placeholder: 예) Internal Server Error 응답이 반환됩니다.
-    validations:
-      required: true
-
-  - type: textarea
-    id: screenshot
-    attributes:
-      label: 스크린샷 / 로그
-      description: 관련 스크린샷, 에러 로그, 응답값 등을 첨부해주세요.
-      placeholder: 선택 사항입니다.
-    validations:
-      required: false
-
-  - type: input
-    id: assignee
-    attributes:
-      label: 담당자
-      description: 담당자가 정해졌다면 작성해주세요.
-      placeholder: 예) @sevin98
-    validations:
-      required: false
