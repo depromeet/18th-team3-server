@@ -9,6 +9,9 @@ on:
       - edited
       - synchronize
       - closed
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -17,11 +20,12 @@ permissions:
 
 # 레이스 방지용 concurrency
 concurrency:
-  group: slack-pr-bot-${{ github.event.pull_request.number }}
+  group: slack-pr-bot-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: false
 
 jobs:
   notify-slack:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
       SLACK_USER_MAP: '{"m-a-king":"U0AKAEF2K9U","1o18z":"U0AKQ6G8BT3","sevin98":"U0AK6U2J62F"}'
@@ -227,19 +231,11 @@ jobs:
           REVIEWER_TEXT=$(build_reviewer_text)
           ISSUE_TEXT=$(build_issue_text "$PR_BODY")
           SUMMARY=$(build_summary "$PR_BODY")
-          
-          STATUS_LINE=""
-          if [ "${{ github.event.action }}" = "closed" ] && [ "${{ steps.pr.outputs.merged }}" = "true" ]; then
-            STATUS_LINE="✅ 머지 완료"
-          elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ steps.pr.outputs.merged }}" != "true" ]; then
-            STATUS_LINE="🗑️ 머지 없이 종료됨"
-          fi
-          
+
           TITLE_LINK="<${{ steps.pr.outputs.pr_url }}|#${{ steps.pr.outputs.pr_number }} ${{ steps.pr.outputs.pr_title }}>"
 
           TEXT=$(cat <<EOF
           [PR] $TITLE_LINK
-          $STATUS_LINE
           
           
           🔥 연관 이슈
@@ -545,5 +541,63 @@ jobs:
           if [ "$OK" != "true" ]; then
             echo "Slack reply failed"
             echo "$RESP"
+            exit 1
+          fi
+
+  alert-direct-push:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      SLACK_USER_MAP: '{"m-a-king":"U0AKAEF2K9U","1o18z":"U0AKQ6G8BT3","sevin98":"U0AK6U2J62F"}'
+    steps:
+      - name: Check if direct push (not a PR merge)
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          PR_LIST=$(curl -s \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls")
+
+          PR_COUNT=$(echo "$PR_LIST" | jq 'length')
+          echo "pr_count=$PR_COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Send Slack alert
+        if: steps.check.outputs.pr_count == '0'
+        shell: bash
+        run: |
+          PUSHER="${{ github.actor }}"
+          SLACK_ID=$(echo "$SLACK_USER_MAP" | jq -r --arg login "$PUSHER" '.[$login] // empty')
+
+          if [ -n "$SLACK_ID" ]; then
+            PUSHER_MENTION="<@$SLACK_ID>"
+          else
+            PUSHER_MENTION="$PUSHER"
+          fi
+
+          COMMIT_MSG=$(jq -r '.head_commit.message // ""' "$GITHUB_EVENT_PATH" | head -n 1)
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+
+          TEXT=$(printf '<!channel> 🚨🚨🚨 %s 님이 main에 *직접 푸시*했어요!!\n비상비상 애옹애옹\n\n• *커밋*: <%s|%s>\n• *메시지*: %s' \
+            "$PUSHER_MENTION" \
+            "$COMMIT_URL" \
+            "$SHORT_SHA" \
+            "$COMMIT_MSG")
+
+          RESP=$(curl -s -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer ${{ secrets.SLACK_BOT_TOKEN }}" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            --data "$(jq -n \
+              --arg channel "${{ secrets.SLACK_CHANNEL_ID }}" \
+              --arg text "$TEXT" \
+              '{channel:$channel,text:$text,unfurl_links:false}')")
+
+          OK=$(echo "$RESP" | jq -r '.ok')
+          if [ "$OK" != "true" ]; then
+            echo "Slack post failed: $RESP"
             exit 1
           fi
