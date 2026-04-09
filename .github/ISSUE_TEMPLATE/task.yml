@@ -1,43 +1,19 @@
 name: "📌 Task"
 description: "일반 작업"
-title: "[TASK] "
 labels: ["task"]
 body:
   - type: textarea
-    id: description
+    id: why
     attributes:
-      label: 작업 내용
-      description: 수행할 작업을 작성해주세요.
-      placeholder: 예) GitHub Actions CI 파이프라인을 추가합니다.
+      label: 왜
+      description: 배경, 필요성
     validations:
       required: true
 
   - type: textarea
-    id: reason
+    id: what
     attributes:
-      label: 목적
-      description: 왜 이 작업이 필요한지 작성해주세요.
-      placeholder: 예) PR 단계에서 테스트 자동화를 통해 코드 안정성을 확보하기 위함입니다.
+      label: 무엇을
+      description: 목표 상태, 예상 작업
     validations:
       required: true
-
-  - type: textarea
-    id: todo
-    attributes:
-      label: 할 일
-      description: 작업 단위를 체크리스트로 작성해주세요.
-      placeholder: |
-        - [ ] build workflow 작성
-        - [ ] test workflow 작성
-        - [ ] badge 추가
-    validations:
-      required: true
-
-  - type: textarea
-    id: additional
-    attributes:
-      label: 참고 사항
-      description: 관련 링크나 추가 설명이 있으면 작성해주세요.
-      placeholder: 선택 사항입니다.
-    validations:
-      required: false
