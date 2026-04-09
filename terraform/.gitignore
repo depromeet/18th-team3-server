@@ -22,3 +22,6 @@ terraform.rc
 
 # Plan output
 *.tfplan
+
+# Infracost local cache
+.infracost/
