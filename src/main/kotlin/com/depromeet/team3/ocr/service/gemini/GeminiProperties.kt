@@ -13,4 +13,9 @@ data class GeminiProperties(
         }
         require(model.isNotBlank()) { "gemini.model 이 비어 있습니다." }
     }
+
+    // data class 의 기본 toString() 은 모든 프로퍼티를 그대로 노출한다.
+    // 바인딩 실패 로그, 디버그 출력, 예외 메시지 등에 객체가 딸려 나가더라도
+    // apiKey 가 유출되지 않도록 마스킹한다.
+    override fun toString(): String = "GeminiProperties(apiKey=*secret*, model=$model)"
 }
