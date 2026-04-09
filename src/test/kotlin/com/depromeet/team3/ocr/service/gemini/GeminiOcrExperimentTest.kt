@@ -1,7 +1,6 @@
 package com.depromeet.team3.ocr.service.gemini
 
 import com.depromeet.team3.common.domain.Product
-import com.depromeet.team3.common.domain.Product.Field
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import tools.jackson.databind.ObjectMapper
 import kotlin.system.measureTimeMillis
-import kotlin.test.assertTrue
 
 /**
  * Gemini OCR **수동 실험용** 테스트.
@@ -82,11 +80,8 @@ class GeminiOcrExperimentTest(
         println("  name     = ${product.name}")
         println("  price    = ${product.price}")
         println("  category = ${product.category}")
-
-        assertTrue(
-            product.name is Field.Extracted || product.name is Field.Inferred,
-            "[$model | $format] 상품명이 추출되지 않았습니다: ${product.name}",
-        )
+        // 이 테스트는 관찰 목적이라 assertion 을 두지 않는다.
+        // 실제 비교는 콘솔 출력을 눈으로 보며 판단할 것.
     }
 
     private fun loadTestImage(format: String): Pair<ByteArray, String> {
