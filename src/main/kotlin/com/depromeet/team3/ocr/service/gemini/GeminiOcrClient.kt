@@ -3,6 +3,7 @@ package com.depromeet.team3.ocr.service.gemini
 import com.depromeet.team3.common.domain.Product
 import com.depromeet.team3.ocr.service.OcrClient
 import org.springframework.http.MediaType
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
@@ -18,6 +19,12 @@ class GeminiOcrClient(
     private val restClient = RestClient
         .builder()
         .baseUrl("https://generativelanguage.googleapis.com")
+        .requestFactory(
+            SimpleClientHttpRequestFactory().apply {
+                setConnectTimeout(CONNECT_TIMEOUT_MS)
+                setReadTimeout(READ_TIMEOUT_MS)
+            },
+        )
         .build()
 
     override fun analyzeImage(
@@ -41,25 +48,40 @@ class GeminiOcrClient(
         //       - 대상: 5xx 및 네트워크 타임아웃
         //       - 방식: 지수 백오프 + 최대 N회 (e.g. Resilience4j Retry 또는 RestClient interceptor)
         //       - 주의: 4xx (ex. 잘못된 API 키, 지원하지 않는 mimeType) 는 재시도 대상에서 제외
-        val response = restClient
-            .post()
-            .uri {
-                it
-                    .path("/v1beta/models/{model}:generateContent")
-                    .build(geminiProperties.model)
-            }
-            .header(GEMINI_API_KEY_HEADER, geminiProperties.apiKey)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(request)
-            .retrieve()
-            .body<GeminiOcrResponse>()
-            ?: throw GeminiApiException("Gemini 응답이 비어 있습니다.")
+        val response = try {
+            restClient
+                .post()
+                .uri {
+                    it
+                        .path("/v1beta/models/{model}:generateContent")
+                        .build(geminiProperties.model)
+                }
+                .header(GEMINI_API_KEY_HEADER, geminiProperties.apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .retrieve()
+                .body<GeminiOcrResponse>()
+        } catch (e: Exception) {
+            // 이 블록의 목적은 "외부 의존성 호출을 격리하고 실패를 정규화하는 것" 이다.
+            // RestClientException 만 잡으면 응답 역직렬화 실패(HttpMessageNotReadableException 등)
+            // 가 그대로 누수돼 500 이 반환되므로, 뭐가 터지든 502 (GeminiApiException) 로 래핑한다.
+            // 원인은 cause 체인에 보존되어 로그로 추적 가능.
+            throw GeminiApiException("Gemini 호출 실패: ${e.message}", e)
+        }
+        response ?: throw GeminiApiException("Gemini 응답이 비어 있습니다.")
 
-        val ocrResult = objectMapper.readValue<GeminiOcrResult>(response.extractText())
+        val ocrResult = try {
+            objectMapper.readValue<GeminiOcrResult>(response.extractText())
+        } catch (e: Exception) {
+            throw GeminiApiException("Gemini 응답 파싱 실패: ${e.message}", e)
+        }
         return ocrResult.toProduct()
     }
 
     companion object {
+        private const val CONNECT_TIMEOUT_MS = 5_000
+        private const val READ_TIMEOUT_MS = 30_000
+
         // API 키를 URL 쿼리파라미터 대신 헤더로 전달해 access log 등에 키가 남지 않도록 함.
         // https://ai.google.dev/gemini-api/docs/api-key#provide-api-key-explicitly
         private const val GEMINI_API_KEY_HEADER = "x-goog-api-key"
