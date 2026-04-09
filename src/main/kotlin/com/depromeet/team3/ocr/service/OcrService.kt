@@ -9,6 +9,7 @@ class OcrService(
     private val ocrClient: OcrClient,
 ) {
     fun extract(image: MultipartFile): Product {
+        require(!image.isEmpty) { "빈 이미지 파일은 처리할 수 없습니다." }
         val mimeType = image.contentType ?: throw IllegalArgumentException("이미지 타입이 지정되지 않았습니다.")
         return ocrClient.analyzeImage(image.bytes, mimeType)
     }

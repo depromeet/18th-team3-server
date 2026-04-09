@@ -26,6 +26,21 @@ class OcrServiceTest {
     private val ocrService = OcrService(stubClient)
 
     @Test
+    fun `빈 파일이 들어오면 IllegalArgumentException 을 던진다`() {
+        val file = MockMultipartFile(
+            "image",
+            "empty.png",
+            "image/png",
+            ByteArray(0),
+        )
+
+        val ex = assertFailsWith<IllegalArgumentException> {
+            ocrService.extract(file)
+        }
+        assertEquals("빈 이미지 파일은 처리할 수 없습니다.", ex.message)
+    }
+
+    @Test
     fun `mimeType 이 지정되지 않으면 IllegalArgumentException 을 던진다`() {
         val file = MockMultipartFile(
             /* name = */ "image",
