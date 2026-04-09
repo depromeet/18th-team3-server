@@ -582,10 +582,10 @@ jobs:
           SHORT_SHA="${SHORT_SHA:0:7}"
           COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
-          SOUNDS=("비상비상 애옹애옹 🐱" "비상비상 멍멍멍멍 🐶" "비상비상 크르르릉~~~!!! 🐯" "비상비상 꽥꽥꽥꽥 🦆" "비상비상 어흥어흥!!! 🦁" "비상비상 뀨뀨뀨뀨 🐹" "비상비상 히이이잉~~~ 🐴")
+          SOUNDS=("비상비상 애옹애옹 🐱" "비상비상 멍멍멍멍 🐶" "비상비상 크르르릉~~~!!! 🐯" "비상비상 꽥꽥꽥꽥 🦆" "비상비상 어흥어흥!!! 🦁" "비상비상 뀨뀨뀨뀨 🐹" "비상비상 히이이잉~~~ 🐴" "비상비상 총총총총 🐰")
           SOUND="${SOUNDS[$RANDOM % ${#SOUNDS[@]}]}"
 
-          TEXT=$(printf '<!channel> 🚨🚨🚨 %s 님이 main에 *직접 푸시*했어요!!\n%s\n\n• *커밋*: <%s|%s>\n• *메시지*: %s' \
+          TEXT=$(printf '<!channel> 🚨🚨🚨 %s 님이 main에 *직접 푸시* 했어요!!\n%s\n\n• *커밋*: <%s|%s>\n• *메시지*: %s' \
             "$PUSHER_MENTION" \
             "$SOUND" \
             "$COMMIT_URL" \
