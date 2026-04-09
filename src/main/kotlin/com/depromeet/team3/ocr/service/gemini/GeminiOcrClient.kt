@@ -70,12 +70,12 @@ class GeminiOcrClient(
         }
         response ?: throw GeminiApiException("Gemini 응답이 비어 있습니다.")
 
-        val ocrResult = try {
-            objectMapper.readValue<GeminiOcrResult>(response.extractText())
+        return try {
+            val ocrResult = objectMapper.readValue<GeminiOcrResult>(response.extractText())
+            ocrResult.toProduct()
         } catch (e: Exception) {
-            throw GeminiApiException("Gemini 응답 파싱 실패: ${e.message}", e)
+            throw GeminiApiException("Gemini 응답 처리 실패: ${e.message}", e)
         }
-        return ocrResult.toProduct()
     }
 
     companion object {
