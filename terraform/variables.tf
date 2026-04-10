@@ -65,9 +65,14 @@ variable "db_instance_class" {
 }
 
 variable "db_engine_version" {
-  description = "MySQL 엔진 버전 (8.4 = 최신 LTS)"
+  description = <<-EOT
+    MySQL 엔진 버전. 8.4 는 Innovation Release 라인이므로 AWS RDS 의
+    표준 지원 종료일을 주기적으로 확인하고 수명주기가 충분히 남은 마이너 버전으로 유지할 것.
+    참고: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Concepts.VersionMgmt.html
+  EOT
   type        = string
-  default     = "8.4.3"
+  # 8.4.3 은 2026-05-31 에 RDS 표준 지원 종료 예정이므로 8.4.8 (~2027-02-03) 로 승격
+  default = "8.4.8"
 }
 
 variable "db_name" {
@@ -87,6 +92,16 @@ variable "db_password" {
   type        = string
   sensitive   = true
   # default 를 두지 않아 실수로 평문이 커밋되지 않도록 강제한다
+
+  # terraform.tfvars.example 의 placeholder 그대로 apply 되는 사고를 막기 위한 가드.
+  # 길이 하한(16자) 은 AWS RDS 마스터 비밀번호 권장 최소치를 반영.
+  validation {
+    condition = (
+      length(var.db_password) >= 16 &&
+      var.db_password != "CHANGE_ME_STRONG_PASSWORD"
+    )
+    error_message = "db_password 는 16자 이상이어야 하며 example 파일의 placeholder 그대로 사용할 수 없습니다."
+  }
 }
 
 variable "db_allocated_storage" {
