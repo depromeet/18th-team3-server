@@ -48,6 +48,17 @@ variable "ec2_instance_type" {
   default     = "t4g.micro"
 }
 
+variable "ec2_ami_id" {
+  description = <<-EOT
+    EC2 에 사용할 고정 AMI ID. 값을 지정하면 data.aws_ami 조회 대신 이 ID 를 그대로 사용한다.
+    null 이면 data source 로 최신 Ubuntu 24.04 arm64 AMI 를 조회하지만,
+    새 AMI 가 공개될 때마다 apply 시점에 인스턴스가 교체될 수 있으므로
+    운영 단계에서는 반드시 조회된 AMI ID 를 이 변수로 고정할 것.
+  EOT
+  type        = string
+  default     = null
+}
+
 variable "ssh_ingress_cidr" {
   description = "SSH 접속을 허용할 CIDR. 실제로는 본인/팀원 공인 IP/32 로 좁힐 것"
   type        = string

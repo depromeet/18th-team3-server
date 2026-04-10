@@ -4,10 +4,15 @@
 # t4g.* 는 Graviton(ARM) 이므로 반드시 arm64 AMI 를 써야 한다.
 # owner 099720109477 은 Canonical 공식 계정.
 #
-# 이 data source 는 실제 AWS API 호출이 필요하므로 mock provider 로는
-# plan 시점에 실패한다. 계정 연결 후에만 활성화할 것.
+# 이 data source 는 var.ec2_ami_id 가 null 일 때만 실행된다. 새 AMI 가 공개될
+# 때마다 apply 시점에 인스턴스가 교체될 수 있으므로 부트스트랩 용도로만 사용하고,
+# 최초 apply 이후에는 resolved 된 AMI ID 를 var.ec2_ami_id 로 고정해 교체를 막을 것.
+#
+# 또한 실제 AWS API 호출이 필요하므로 mock provider 로는 plan 시점에 실패한다.
+# 계정 연결 후에만 활성화할 것.
 # -----------------------------------------------------------------------------
 data "aws_ami" "ubuntu_2404_arm64" {
+  count       = var.ec2_ami_id == null ? 1 : 0
   most_recent = true
   owners      = ["099720109477"] # Canonical
 
@@ -28,7 +33,7 @@ data "aws_ami" "ubuntu_2404_arm64" {
 }
 
 resource "aws_instance" "app" {
-  ami                    = data.aws_ami.ubuntu_2404_arm64.id
+  ami                    = var.ec2_ami_id != null ? var.ec2_ami_id : data.aws_ami.ubuntu_2404_arm64[0].id
   instance_type          = var.ec2_instance_type
   subnet_id              = aws_subnet.public.id
   availability_zone      = var.azs[0]
