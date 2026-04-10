@@ -8,15 +8,10 @@
 
 # AWS-0104: Security group egress 0.0.0.0/0
 # 사유: EC2 는 패키지 업데이트, JDK/Docker pull, 외부 API 호출 등을 위해
-#       아웃바운드 인터넷이 필요하다. RDS SG 의 egress 도 동일한 관행.
+#       아웃바운드 인터넷이 필요하다. (RDS SG 는 egress 를 닫아 두었으므로 해당 없음.)
 #       엄격하게 막으려면 VPC Endpoint 로 S3/ECR 등만 화이트리스트 해야 하는데
 #       학습 프로젝트 범위에서는 과잉. prod 전환 시 재검토.
 AWS-0104
-
-# AWS-0164: Subnet associates public IP address (map_public_ip_on_launch = true)
-# 사유: 단일 EC2 를 퍼블릭 서브넷에 두는 것이 이 아키텍처의 의도.
-#       ALB + 프라이빗 EC2 구성으로 바꿀 때 이 예외도 함께 제거.
-AWS-0164
 
 # AWS-0178: VPC does not have VPC Flow Logs enabled
 # 사유: CloudWatch Logs 요금을 피하기 위해 dev 단계에서는 비활성.
