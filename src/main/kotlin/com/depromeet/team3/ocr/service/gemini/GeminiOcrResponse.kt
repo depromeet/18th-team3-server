@@ -12,14 +12,6 @@ package com.depromeet.team3.ocr.service.gemini
 data class GeminiOcrResponse(
     val candidates: List<Candidate>,
 ) {
-    /**
-     * 응답에서 첫 번째 텍스트 파트를 꺼낸다.
-     *
-     * `candidates` 또는 `parts` 가 빈 리스트인 경우 (safety filter 차단, 모델 실패 등)
-     * `first()` 는 `NoSuchElementException` 을 던지는데, 호출 측에서 이 예외의 의미를
-     * 추론하려면 구현을 들여다봐야 한다. DTO 단에서 명시적으로 GeminiApiException 으로
-     * 변환해 "응답이 비어 있다" 는 의도를 그대로 드러낸다.
-     */
     fun extractText(): String =
         candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
             ?: throw GeminiApiException("Gemini 응답에 텍스트 파트가 없습니다.")
