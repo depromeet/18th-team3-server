@@ -2,10 +2,11 @@
 
 ## Null 처리 원칙
 
-**코드에서 `null`이라는 단어 자체를 제거한다.**
+**`== null` / `!= null` 분기를 제거한다.** 모든 nullable 처리는 Elvis(`?:`) + early return / throw / default 로 표현한다.
 
 ### 규칙
-- **`== null` / `!= null` 사용 금지** — 모든 null 분기는 Elvis(`?:`) + early return / throw / default 로 표현한다.
+- **`== null` / `!= null` 사용 금지** — Elvis(`?:`)로 대체한다.
+- **`requireNotNull` / `checkNotNull` 은 허용한다.** "non-null이어야 한다"는 의도가 시그니처에 명확히 드러나는 Kotlin 표준 idiom이며, 금지 대상은 어디까지나 `== null` / `!= null` 분기 패턴 한정이다.
 - **Elvis + early return 패턴을 기본으로 한다.**
   ```kotlin
   // ❌ 금지
