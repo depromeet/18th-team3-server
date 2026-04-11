@@ -19,8 +19,9 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter")
+	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("tools.jackson.module:jackson-module-kotlin")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -34,4 +35,6 @@ kotlin {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	// JDK 21+부터 동적 에이전트 로딩이 제한됨. Mockito(ByteBuddy)가 런타임에 에이전트를 붙이므로 명시적 허용 필요.
+	jvmArgs("-XX:+EnableDynamicAgentLoading")
 }

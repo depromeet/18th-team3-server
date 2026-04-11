@@ -13,6 +13,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'file=$(jq -r .tool_input.file_path 2>/dev/null); [[ \"$file\" == *.kt ]] || exit 0; hits=$(grep -nE \"(==|!=)[[:space:]]*null\" \"$file\" || true); if [ -n \"$hits\" ]; then echo \"🚫 null 리터럴 비교 금지 (CLAUDE.md 참조). Elvis(?:)로 치환하세요:\" >&2; echo \"$hits\" >&2; exit 2; fi; exit 0'"
+          }
+        ]
+      }
     ]
   }
 }

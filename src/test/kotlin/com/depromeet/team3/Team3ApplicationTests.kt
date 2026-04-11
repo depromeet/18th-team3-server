@@ -6,8 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest
 class Team3ApplicationTests {
 
-	@Test
-	fun contextLoads() {
-	}
-
+    @Test
+    fun contextLoads() {
+    }
 }
