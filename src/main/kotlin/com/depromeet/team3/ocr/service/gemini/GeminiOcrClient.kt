@@ -62,19 +62,15 @@ class GeminiOcrClient(
                 .retrieve()
                 .body<GeminiOcrResponse>()
         } catch (e: Exception) {
-            // 이 블록의 목적은 "외부 의존성 호출을 격리하고 실패를 정규화하는 것" 이다.
-            // RestClientException 만 잡으면 응답 역직렬화 실패(HttpMessageNotReadableException 등)
-            // 가 그대로 누수돼 500 이 반환되므로, 뭐가 터지든 502 (GeminiApiException) 로 래핑한다.
-            // 원인은 cause 체인에 보존되어 로그로 추적 가능.
-            throw GeminiApiException("Gemini 호출 실패: ${e.message}", e)
+            throw GeminiApiException.upstreamError(e.message, e)
         }
-        response ?: throw GeminiApiException("Gemini 응답이 비어 있습니다.")
+        response ?: throw GeminiApiException.emptyResponse()
 
         return try {
             val ocrResult = objectMapper.readValue<GeminiOcrResult>(response.extractText())
             ocrResult.toProduct()
         } catch (e: Exception) {
-            throw GeminiApiException("Gemini 응답 처리 실패: ${e.message}", e)
+            throw GeminiApiException.parseError(e.message, e)
         }
     }
 
