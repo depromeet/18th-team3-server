@@ -91,9 +91,11 @@ jobs:
 
           TS=$(echo "$BODY" | sed -n 's/.*"ts":"\([^"]*\)".*/\1/p')
           CHANNEL=$(echo "$BODY" | sed -n 's/.*"channel":"\([^"]*\)".*/\1/p')
+          INITIAL_REVIEWERS=$(echo "$BODY" | grep -oP '"initial_reviewers":\K\[[^\]]*\]' || echo "[]")
 
           echo "ts=$TS" >> "$GITHUB_OUTPUT"
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "initial_reviewers=$INITIAL_REVIEWERS" >> "$GITHUB_OUTPUT"
 
       - name: Post parent message
         if: steps.find_ts.outputs.ts == '' && github.event.action == 'opened' && github.event.pull_request.draft == false
@@ -276,7 +278,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          BODY="<!-- slack-pr-bot: {\"channel\":\"${{ secrets.SLACK_CHANNEL_ID }}\",\"ts\":\"${{ steps.post_parent.outputs.ts }}\"} -->"
+          INITIAL_REVIEWERS=$(jq -c '[.pull_request.requested_reviewers[]?.login]' "$GITHUB_EVENT_PATH")
+          BODY="<!-- slack-pr-bot: {\"channel\":\"${{ secrets.SLACK_CHANNEL_ID }}\",\"ts\":\"${{ steps.post_parent.outputs.ts }}\",\"initial_reviewers\":$INITIAL_REVIEWERS} -->"
 
           curl -s -X POST \
             -H "Authorization: Bearer $GH_TOKEN" \
@@ -490,6 +493,15 @@ jobs:
 
           if [ "$ACTION" = "review_requested" ]; then
             REQUESTED_REVIEWER=$(jq -r '.requested_reviewer.login // ""' "$GITHUB_EVENT_PATH")
+            INITIAL_REVIEWERS='${{ steps.find_ts.outputs.initial_reviewers }}'
+            [ -z "$INITIAL_REVIEWERS" ] && INITIAL_REVIEWERS="[]"
+
+            IS_INITIAL=$(echo "$INITIAL_REVIEWERS" | jq -r --arg r "$REQUESTED_REVIEWER" 'map(. == $r) | any')
+            if [ "$IS_INITIAL" = "true" ]; then
+              echo "Reviewer $REQUESTED_REVIEWER was present at PR open, skipping thread reply."
+              exit 0
+            fi
+
             if [ -n "$REQUESTED_REVIEWER" ]; then
               TEXT="🙋 리뷰 요청됨: $(mention_slack_user "$REQUESTED_REVIEWER")"
             else
