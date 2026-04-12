@@ -1,0 +1,122 @@
+variable "project" {
+  description = "프로젝트 식별자 (태그/리소스 이름 접두사)"
+  type        = string
+  default     = "team3"
+}
+
+variable "environment" {
+  description = "배포 환경 (dev / stg / prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "aws_region" {
+  description = "AWS 리전"
+  type        = string
+  default     = "ap-northeast-2"
+}
+
+variable "vpc_cidr" {
+  description = "VPC CIDR 블록"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_cidr" {
+  description = "EC2 가 위치할 퍼블릭 서브넷 CIDR"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "private_subnet_cidrs" {
+  description = "RDS DB Subnet Group 용 프라이빗 서브넷 CIDR 목록 (최소 2개 AZ 필요)"
+  type        = list(string)
+  default     = ["10.0.11.0/24", "10.0.12.0/24"]
+}
+
+variable "azs" {
+  description = "사용할 가용영역 목록 (private subnet 과 1:1 매핑)"
+  type        = list(string)
+  default     = ["ap-northeast-2a", "ap-northeast-2c"]
+}
+
+# ----- EC2 -----
+
+variable "ec2_instance_type" {
+  description = "EC2 인스턴스 타입 (ARM / Graviton)"
+  type        = string
+  default     = "t4g.micro"
+}
+
+variable "ec2_ami_id" {
+  description = <<-EOT
+    EC2 에 사용할 고정 AMI ID. 값을 지정하면 data.aws_ami 조회 대신 이 ID 를 그대로 사용한다.
+    null 이면 data source 로 최신 Ubuntu 24.04 arm64 AMI 를 조회하지만,
+    새 AMI 가 공개될 때마다 apply 시점에 인스턴스가 교체될 수 있으므로
+    운영 단계에서는 반드시 조회된 AMI ID 를 이 변수로 고정할 것.
+  EOT
+  type        = string
+  default     = null
+}
+
+variable "ssh_ingress_cidr" {
+  description = "SSH 접속을 허용할 CIDR. 실제로는 본인/팀원 공인 IP/32 로 좁힐 것"
+  type        = string
+  # TODO: 팀원 IP 확보 후 terraform.tfvars 에서 실제 값으로 override 할 것.
+  # 아래는 RFC 5737 문서화용 예약 대역(TEST-NET-3) 의 placeholder 이며 실제 라우팅되지 않음.
+  default = "203.0.113.1/32"
+}
+
+# ----- RDS -----
+
+variable "db_instance_class" {
+  description = "RDS 인스턴스 클래스"
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "db_engine_version" {
+  description = <<-EOT
+    MySQL 엔진 버전. 8.4 는 Innovation Release 라인이므로 AWS RDS 의
+    표준 지원 종료일을 주기적으로 확인하고 수명주기가 충분히 남은 마이너 버전으로 유지할 것.
+    참고: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Concepts.VersionMgmt.html
+  EOT
+  type        = string
+  # 8.4.3 은 2026-05-31 에 RDS 표준 지원 종료 예정이므로 8.4.8 (~2027-02-03) 로 승격
+  default = "8.4.8"
+}
+
+variable "db_name" {
+  description = "초기 생성할 데이터베이스 이름"
+  type        = string
+  default     = "team3"
+}
+
+variable "db_username" {
+  description = "RDS 마스터 사용자 이름"
+  type        = string
+  default     = "admin"
+}
+
+variable "db_password" {
+  description = "RDS 마스터 비밀번호. terraform.tfvars 또는 환경변수(TF_VAR_db_password)로 주입"
+  type        = string
+  sensitive   = true
+  # default 를 두지 않아 실수로 평문이 커밋되지 않도록 강제한다
+
+  # terraform.tfvars.example 의 placeholder 그대로 apply 되는 사고를 막기 위한 가드.
+  # 길이 하한(16자) 은 AWS RDS 마스터 비밀번호 권장 최소치를 반영.
+  validation {
+    condition = (
+      length(var.db_password) >= 16 &&
+      var.db_password != "CHANGE_ME_STRONG_PASSWORD"
+    )
+    error_message = "db_password 는 16자 이상이어야 하며 example 파일의 placeholder 그대로 사용할 수 없습니다."
+  }
+}
+
+variable "db_allocated_storage" {
+  description = "RDS 초기 스토리지 (GB)"
+  type        = number
+  default     = 20
+}

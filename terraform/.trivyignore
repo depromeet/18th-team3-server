@@ -1,0 +1,34 @@
+# -----------------------------------------------------------------------------
+# Trivy IaC 스캔 예외 목록
+#
+# 각 항목은 "의도된 설정" 이며, 왜 무시하는지 명시한다.
+# 새 경고가 뜨면 여기에 추가하지 말고 먼저 실제로 수정 가능한지 검토할 것.
+# 포맷: <ID>  (옵션으로 expiry 날짜 지정 가능)
+# -----------------------------------------------------------------------------
+
+# AWS-0104: Security group egress 0.0.0.0/0
+# 사유: EC2 는 패키지 업데이트, JDK/Docker pull, 외부 API 호출 등을 위해
+#       아웃바운드 인터넷이 필요하다. (RDS SG 는 egress 를 닫아 두었으므로 해당 없음.)
+#       엄격하게 막으려면 VPC Endpoint 로 S3/ECR 등만 화이트리스트 해야 하는데
+#       학습 프로젝트 범위에서는 과잉. prod 전환 시 재검토.
+AWS-0104
+
+# AWS-0178: VPC does not have VPC Flow Logs enabled
+# 사유: CloudWatch Logs 요금을 피하기 위해 dev 단계에서는 비활성.
+#       운영 환경으로 승격 시 반드시 활성화하고 이 항목 제거.
+AWS-0178
+
+# AWS-0177: RDS does not have Deletion Protection enabled
+# 사유: dev 단계에서 terraform destroy 로 자유롭게 재생성하기 위함.
+#       prod 전환 시 rds.tf 의 deletion_protection = true 로 변경하고 이 항목 제거.
+AWS-0177
+
+# AWS-0176: RDS does not have IAM Authentication enabled
+# 사유: 현재는 마스터 계정 + 비밀번호만 사용. IAM 인증은 추후 운영 전환 시 도입.
+#       Spring Boot 쪽 JDBC URL 도 함께 바꿔야 하므로 별도 작업으로 분리.
+AWS-0176
+
+# AWS-0133: RDS does not have Performance Insights enabled
+# 사유: db.t4g.micro 에서도 무료지만 현재 단계에서 모니터링 필요성이 낮음.
+#       장애 분석이 필요해지는 시점에 활성화. 제거해도 무방한 낮은 우선순위.
+AWS-0133
