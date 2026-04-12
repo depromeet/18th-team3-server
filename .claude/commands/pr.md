@@ -66,7 +66,7 @@ close #이슈번호
 
 ### PR 제목 규칙
 - 70자 이내
-- 커밋 타입 prefix 사용 (feat, fix, refactor, chore 등)
-- 예: `refactor: 예외 처리 시스템 공통화`
+- 타입 prefix를 붙이지 않는다 (커밋과 다름)
+- 예: `예외 처리 시스템 공통화`, `PR 생성 스킬 추가`
 
 $ARGUMENTS
