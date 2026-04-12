@@ -5,7 +5,9 @@ import com.depromeet.team3.ocr.service.OcrClient
 import org.springframework.http.MediaType
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
+import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.body
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
@@ -61,13 +63,21 @@ class GeminiOcrClient(
                 .body(request)
                 .retrieve()
                 .body<GeminiOcrResponse>()
+        } catch (e: RestClientResponseException) {
+            throw when {
+                e.statusCode.is5xxServerError -> GeminiApiException.upstreamError(e.message, e)
+                else -> GeminiApiException.clientError(e.message, e)
+            }
+        } catch (e: ResourceAccessException) {
+            throw GeminiApiException.upstreamError(e.message, e)
         } catch (e: Exception) {
             throw GeminiApiException.upstreamError(e.message, e)
         }
         response ?: throw GeminiApiException.emptyResponse()
 
+        val text = response.extractText()
         return try {
-            val ocrResult = objectMapper.readValue<GeminiOcrResult>(response.extractText())
+            val ocrResult = objectMapper.readValue<GeminiOcrResult>(text)
             ocrResult.toProduct()
         } catch (e: Exception) {
             throw GeminiApiException.parseError(e.message, e)

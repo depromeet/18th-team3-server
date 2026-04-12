@@ -16,7 +16,7 @@ class GlobalExceptionHandler {
         log.warn("[{}] {}", e.javaClass.simpleName, e.message, e)
         val status = if (e is HttpMappable) e.httpStatus else HttpStatus.INTERNAL_SERVER_ERROR
         val category = if (e is HttpMappable) e.category else ErrorCategory.SERVER_ERROR
-        return ProblemDetail.forStatusAndDetail(status, e.message).apply {
+        return ProblemDetail.forStatusAndDetail(status, category.description).apply {
             setProperty("category", category)
         }
     }
@@ -32,7 +32,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(e: Exception): ProblemDetail {
         log.error("[UnexpectedException] {}", e.message, e)
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류입니다.").apply {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.SERVER_ERROR.description).apply {
             setProperty("category", ErrorCategory.SERVER_ERROR)
         }
     }

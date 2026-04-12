@@ -17,6 +17,9 @@ class GeminiApiException private constructor(
         fun upstreamError(detail: String?, cause: Throwable): GeminiApiException =
             GeminiApiException("Gemini 호출 실패: ${detailOrDefault(detail)}", ErrorCategory.RETRYABLE, cause)
 
+        fun clientError(detail: String?, cause: Throwable): GeminiApiException =
+            GeminiApiException("Gemini 요청 오류: ${detailOrDefault(detail)}", ErrorCategory.SERVER_ERROR, cause)
+
         fun emptyResponse(): GeminiApiException =
             GeminiApiException("Gemini 응답이 비어 있습니다.", ErrorCategory.RETRYABLE)
 
