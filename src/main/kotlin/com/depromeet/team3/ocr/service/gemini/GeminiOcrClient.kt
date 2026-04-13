@@ -70,18 +70,16 @@ class GeminiOcrClient(
             }
         } catch (e: ResourceAccessException) {
             throw GeminiApiException.upstreamError(e.message, e)
-        } catch (e: Exception) {
-            throw GeminiApiException.upstreamError(e.message, e)
         }
         response ?: throw GeminiApiException.emptyResponse()
 
         val text = response.extractText()
-        return try {
-            val ocrResult = objectMapper.readValue<GeminiOcrResult>(text)
-            ocrResult.toProduct()
+        val ocrResult = try {
+            objectMapper.readValue<GeminiOcrResult>(text)
         } catch (e: Exception) {
             throw GeminiApiException.parseError(e.message, e)
         }
+        return ocrResult.toProduct()
     }
 
     companion object {
