@@ -20,12 +20,14 @@ class GeminiApiException private constructor(
         fun clientError(detail: String?, cause: Throwable): GeminiApiException =
             GeminiApiException("Gemini 요청 오류: ${detailOrDefault(detail)}", ErrorCategory.SERVER_ERROR, cause)
 
+        // body 자체가 없음 (역직렬화 이전). transport/인프라 이슈로 일시적일 가능성이 크므로 RETRYABLE.
         fun emptyResponse(): GeminiApiException =
             GeminiApiException("Gemini 응답이 비어 있습니다.", ErrorCategory.RETRYABLE)
 
         fun parseError(detail: String?, cause: Throwable): GeminiApiException =
             GeminiApiException("Gemini 응답 처리 실패: ${detailOrDefault(detail)}", ErrorCategory.SERVER_ERROR, cause)
 
+        // 스키마는 유효하지만 candidates/parts가 빈 리스트. safety filter 등 정책적 거부 가능성이 높아 재시도 무의미하므로 SERVER_ERROR.
         fun noTextPart(): GeminiApiException =
             GeminiApiException("Gemini 응답에 텍스트 파트가 없습니다.", ErrorCategory.SERVER_ERROR)
     }
