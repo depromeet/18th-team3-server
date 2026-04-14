@@ -65,11 +65,11 @@ class GeminiOcrClient(
                 .body<GeminiOcrResponse>()
         } catch (e: RestClientResponseException) {
             throw when {
-                e.statusCode.is5xxServerError -> GeminiApiException.upstreamError(e.message, e)
-                else -> GeminiApiException.clientError(e.message, e)
+                e.statusCode.is5xxServerError -> GeminiApiException.upstreamError(e)
+                else -> GeminiApiException.clientError(e)
             }
         } catch (e: ResourceAccessException) {
-            throw GeminiApiException.upstreamError(e.message, e)
+            throw GeminiApiException.upstreamError(e)
         }
         response ?: throw GeminiApiException.emptyResponse()
 
@@ -77,7 +77,7 @@ class GeminiOcrClient(
         val ocrResult = try {
             objectMapper.readValue<GeminiOcrResult>(text)
         } catch (e: Exception) {
-            throw GeminiApiException.parseError(e.message, e)
+            throw GeminiApiException.parseError(e)
         }
         return ocrResult.toProduct()
     }
