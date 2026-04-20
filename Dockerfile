@@ -26,7 +26,7 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # ────────────────────────────────────────────
 # Stage 3: runtime — 최소 실행 이미지
 # ────────────────────────────────────────────
-FROM eclipse-temurin:25-jdk AS runtime
+FROM eclipse-temurin:25-jre AS runtime
 WORKDIR /app
 
 # non-root 유저 생성
