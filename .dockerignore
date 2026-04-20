@@ -1,0 +1,11 @@
+.git
+.gradle
+build
+.idea
+out
+.kotlin
+terraform
+docs
+*.md
+.env*
+.env-local
