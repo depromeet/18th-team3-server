@@ -1,0 +1,45 @@
+name: Auto Assign Reviewers
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+    # CodeRabbit 리뷰 제출 시에만 실행
+    if: github.event.review.user.login == 'coderabbitai[bot]'
+    steps:
+      - name: Request Review from Team Members
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          TEAM=("sevineleven" "1o18z" "m-a-king")
+
+          # PR 작성자 제외한 리뷰어 목록 구성
+          REVIEWERS=()
+          for member in "${TEAM[@]}"; do
+            if [[ "$member" != "$PR_AUTHOR" ]]; then
+              REVIEWERS+=("$member")
+            fi
+          done
+
+          # 이미 리뷰어가 지정되어 있으면 스킵 (중복 방지)
+          EXISTING=$(gh pr view "$PR_NUMBER" \
+            --repo depromeet/18th-team3-server \
+            --json reviewRequests \
+            --jq '.reviewRequests | length')
+
+          if [[ "$EXISTING" -gt 0 ]]; then
+            echo "Reviewers already assigned, skipping"
+            exit 0
+          fi
+
+          REVIEWER_STR=$(IFS=,; echo "${REVIEWERS[*]}")
+          gh pr edit "$PR_NUMBER" \
+            --add-reviewer "$REVIEWER_STR" \
+            --repo depromeet/18th-team3-server
+
+          echo "Assigned reviewers: $REVIEWER_STR"
