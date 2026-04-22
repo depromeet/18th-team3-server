@@ -24,23 +24,40 @@ jobs:
             exit 0
           fi
 
-          # Epic의 하위 이슈 현황 조회 (이 Epic을 본문에서 참조하는 task/bug/refactor)
-          QUERY="repo:depromeet/18th-team3-server+%23${EPIC_NUM}+in:body+is:issue+-label:epic"
+          # 후보 이슈 전체 조회 후 본문을 직접 파싱
+          # (Search API는 본문 어디든 #N이 언급되면 매칭되어 false positive 발생)
+          CANDIDATES=$(gh issue list \
+            --repo depromeet/18th-team3-server \
+            --state all \
+            --limit 500 \
+            --json number,state,body,labels)
 
-          TOTAL=$(gh api "/search/issues?q=${QUERY}" --jq '.total_count')
-          OPEN=$(gh api "/search/issues?q=${QUERY}+state:open" --jq '.total_count')
-          CLOSED=$((TOTAL - OPEN))
+          # ### 상위 Epic 섹션에 정확히 #EPIC_NUM이 기재된 이슈만 집계
+          PATTERN="### 상위 Epic\\s+#${EPIC_NUM}\\b"
+
+          TOTAL=$(echo "$CANDIDATES" | jq --arg pat "$PATTERN" \
+            '[.[] | select(
+              (.labels | map(.name) | index("epic") | not) and
+              (.body // "" | test($pat))
+            )] | length')
+
+          CLOSED=$(echo "$CANDIDATES" | jq --arg pat "$PATTERN" \
+            '[.[] | select(
+              (.labels | map(.name) | index("epic") | not) and
+              (.state == "CLOSED") and
+              (.body // "" | test($pat))
+            )] | length')
 
           if [[ "$TOTAL" -eq 0 ]]; then
             exit 0
           fi
 
-          if [[ "$OPEN" -eq 0 ]]; then
+          if [[ "$CLOSED" -eq "$TOTAL" ]]; then
             gh issue comment "$EPIC_NUM" \
-              --body "🎉 모든 Task가 완료되었습니다! ($CLOSED/$TOTAL)" \
+              --body "🎉 모든 이슈가 완료되었습니다! ($CLOSED/$TOTAL)" \
               --repo depromeet/18th-team3-server
           else
             gh issue comment "$EPIC_NUM" \
-              --body "✅ Task #$ISSUE_NUMBER 완료 — 진행률: **$CLOSED / $TOTAL**" \
+              --body "✅ 이슈 #$ISSUE_NUMBER 완료 — 진행률: **$CLOSED / $TOTAL**" \
               --repo depromeet/18th-team3-server
           fi
