@@ -1,0 +1,46 @@
+name: Epic Progress Tracker
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  update-epic:
+    runs-on: ubuntu-latest
+    # epic 자신이 닫힐 때는 실행하지 않음
+    if: "!contains(toJson(github.event.issue.labels.*.name), 'epic')"
+    steps:
+      - name: Comment Progress on Parent Epic
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          # 상위 Epic 번호 파싱
+          EPIC_NUM=$(echo "$ISSUE_BODY" | grep -A3 "^### 상위 Epic" | grep -oE "#[0-9]+" | head -1 | tr -d '#')
+
+          if [[ -z "$EPIC_NUM" ]]; then
+            echo "No parent epic found"
+            exit 0
+          fi
+
+          # Epic의 하위 이슈 현황 조회 (이 Epic을 본문에서 참조하는 task/bug/refactor)
+          QUERY="repo:depromeet/18th-team3-server+%23${EPIC_NUM}+in:body+is:issue+-label:epic"
+
+          TOTAL=$(gh api "/search/issues?q=${QUERY}" --jq '.total_count')
+          OPEN=$(gh api "/search/issues?q=${QUERY}+state:open" --jq '.total_count')
+          CLOSED=$((TOTAL - OPEN))
+
+          if [[ "$TOTAL" -eq 0 ]]; then
+            exit 0
+          fi
+
+          if [[ "$OPEN" -eq 0 ]]; then
+            gh issue comment "$EPIC_NUM" \
+              --body "🎉 모든 Task가 완료되었습니다! ($CLOSED/$TOTAL)" \
+              --repo depromeet/18th-team3-server
+          else
+            gh issue comment "$EPIC_NUM" \
+              --body "✅ Task #$ISSUE_NUMBER 완료 — 진행률: **$CLOSED / $TOTAL**" \
+              --repo depromeet/18th-team3-server
+          fi

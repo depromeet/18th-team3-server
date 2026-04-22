@@ -1,0 +1,117 @@
+name: Issue Automation
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project-and-sync-dates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add to Project & Set Dates
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          # 프로젝트 ID 조회
+          PROJECT_ID=$(gh api graphql -f query='{
+            organization(login: "depromeet") {
+              projectV2(number: 99) { id }
+            }
+          }' --jq '.data.organization.projectV2.id')
+
+          # 이슈를 프로젝트에 추가하고 item ID 획득
+          ITEM_ID=$(gh api graphql \
+            -f query='mutation($pid:ID!,$cid:ID!) {
+              addProjectV2ItemById(input:{projectId:$pid,contentId:$cid}) {
+                item { id }
+              }
+            }' \
+            -f pid="$PROJECT_ID" \
+            -f cid="$ISSUE_NODE_ID" \
+            --jq '.data.addProjectV2ItemById.item.id')
+
+          echo "Added to project. Item ID: $ITEM_ID"
+
+          # 프로젝트 필드 ID 조회 (시작일, 마감일)
+          FIELDS=$(gh api graphql -f query='{
+            organization(login: "depromeet") {
+              projectV2(number: 99) {
+                fields(first: 30) {
+                  nodes {
+                    ... on ProjectV2Field { id name dataType }
+                  }
+                }
+              }
+            }
+          }' --jq '.data.organization.projectV2.fields.nodes')
+
+          START_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "시작일" and .dataType == "DATE") | .id')
+          DUE_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "마감일" and .dataType == "DATE") | .id')
+
+          # 이슈 본문에서 날짜 파싱
+          START_DATE=$(echo "$ISSUE_BODY" | grep -A3 "^### 시작일" | grep -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1 | tr -d '[:space:]')
+          DUE_DATE=$(echo "$ISSUE_BODY" | grep -A3 "^### 마감일" | grep -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1 | tr -d '[:space:]')
+
+          # 시작일 업데이트
+          if [[ -n "$START_DATE" && -n "$START_FIELD" ]]; then
+            gh api graphql \
+              -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$val:Date!) {
+                updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{date:$val}}) {
+                  projectV2Item { id }
+                }
+              }' \
+              -f pid="$PROJECT_ID" -f iid="$ITEM_ID" -f fid="$START_FIELD" -f val="$START_DATE"
+            echo "Start date set: $START_DATE"
+          fi
+
+          # 마감일 업데이트
+          if [[ -n "$DUE_DATE" && -n "$DUE_FIELD" ]]; then
+            gh api graphql \
+              -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$val:Date!) {
+                updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{date:$val}}) {
+                  projectV2Item { id }
+                }
+              }' \
+              -f pid="$PROJECT_ID" -f iid="$ITEM_ID" -f fid="$DUE_FIELD" -f val="$DUE_DATE"
+            echo "Due date set: $DUE_DATE"
+          fi
+
+  check-parent-epic:
+    runs-on: ubuntu-latest
+    # task 라벨 이슈에만 적용
+    if: contains(toJson(github.event.issue.labels.*.name), 'task')
+    steps:
+      - name: Warn if No Parent Epic
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          PARENT=$(echo "$ISSUE_BODY" | grep -A3 "^### 상위 Epic" | grep -E "^#[0-9]+" | head -1)
+
+          if [[ -z "$PARENT" ]]; then
+            gh issue edit "$ISSUE_NUMBER" \
+              --add-label "needs-parent" \
+              --repo depromeet/18th-team3-server
+
+            gh issue comment "$ISSUE_NUMBER" \
+              --body "⚠️ 상위 Epic이 연결되지 않았습니다. 관련 Epic이 있다면 이슈 본문의 **상위 Epic** 항목에 \`#번호\` 형태로 추가해주세요." \
+              --repo depromeet/18th-team3-server
+          fi
+
+  check-assignee:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Warn if No Assignee
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ASSIGNEES: ${{ toJson(github.event.issue.assignees) }}
+        run: |
+          if echo "$ASSIGNEES" | jq -e 'length == 0' > /dev/null; then
+            gh issue comment "$ISSUE_NUMBER" \
+              --body "👤 담당자가 지정되지 않았습니다. Assignee를 설정해주세요." \
+              --repo depromeet/18th-team3-server
+          fi
