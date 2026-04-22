@@ -28,7 +28,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
-      SLACK_USER_MAP: '{"m-a-king":"U0AKAEF2K9U","1o18z":"U0AKQ6G8BT3","sevin98":"U0AK6U2J62F"}'
+      SLACK_USER_MAP: '{"m-a-king":"U0AKAEF2K9U","1o18z":"U0AKQ6G8BT3","sevineleven":"U0AK6U2J62F"}'
 
     steps:
       - name: Extract PR data
@@ -560,7 +560,7 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
-      SLACK_USER_MAP: '{"m-a-king":"U0AKAEF2K9U","1o18z":"U0AKQ6G8BT3","sevin98":"U0AK6U2J62F"}'
+      SLACK_USER_MAP: '{"m-a-king":"U0AKAEF2K9U","1o18z":"U0AKQ6G8BT3","sevineleven":"U0AK6U2J62F"}'
     steps:
       - name: Check if direct push (not a PR merge)
         id: check
