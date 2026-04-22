@@ -47,8 +47,8 @@ jobs:
             }
           }' --jq '.data.organization.projectV2.fields.nodes')
 
-          START_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "시작일" and .dataType == "DATE") | .id')
-          DUE_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "마감일" and .dataType == "DATE") | .id')
+          START_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Start date" and .dataType == "DATE") | .id')
+          DUE_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Target date" and .dataType == "DATE") | .id')
 
           # 이슈 본문에서 날짜 파싱
           START_DATE=$(echo "$ISSUE_BODY" | grep -A3 "^### 시작일" | grep -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1 | tr -d '[:space:]')
