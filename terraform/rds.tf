@@ -38,8 +38,10 @@ resource "aws_db_instance" "mysql" {
   # DB Subnet Group 은 2개 AZ 가 필요하지만 실제 인스턴스는 여기 한 곳만 사용.
   availability_zone = var.azs[0]
 
-  backup_retention_period = 7
-  backup_window           = "17:00-18:00" # KST 02:00-03:00
+  # AWS 신규 Free Plan(2025-07-15 이후 가입) 은 retention > 0 을 거부한다(FreeTierRestrictionError).
+  # Paid plan 승격 시 7 로 복구할 것.
+  backup_retention_period = 0
+  backup_window           = "17:00-18:00" # KST 02:00-03:00, retention=0 이면 무시됨
   maintenance_window      = "sun:18:00-sun:19:00"
 
   auto_minor_version_upgrade = true
