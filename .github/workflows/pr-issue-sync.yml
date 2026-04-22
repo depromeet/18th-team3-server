@@ -62,19 +62,17 @@ jobs:
           fi
 
           for ISSUE_NUM in $ISSUE_NUMS; do
-            # 이슈 node_id 조회
-            ISSUE_NODE=$(gh api /repos/depromeet/18th-team3-server/issues/$ISSUE_NUM --jq '.node_id')
-
-            # 프로젝트 내 item ID 조회
-            ITEM_ID=$(gh api graphql -f query='{
-              organization(login: "depromeet") {
-                projectV2(number: 99) {
-                  items(first: 100) {
-                    nodes { id content { ... on Issue { id } } }
+            # 이슈에 연결된 ProjectV2 item 중 대상 프로젝트(ID 일치)만 선택
+            ITEM_ID=$(gh api graphql \
+              -f query='query($owner:String!,$repo:String!,$num:Int!){
+                repository(owner:$owner,name:$repo){
+                  issue(number:$num){
+                    projectItems(first:20){ nodes { id project { id } } }
                   }
                 }
-              }
-            }' --jq --arg nid "$ISSUE_NODE" '.data.organization.projectV2.items.nodes[] | select(.content.id == $nid) | .id')
+              }' \
+              -F owner=depromeet -F repo=18th-team3-server -F num="$ISSUE_NUM" \
+              --jq --arg pid "$PROJECT_ID" '.data.repository.issue.projectItems.nodes[] | select(.project.id == $pid) | .id')
 
             if [[ -n "$ITEM_ID" ]]; then
               gh api graphql \
