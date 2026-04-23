@@ -2,11 +2,11 @@ name: "🐞 Bug"
 description: "버그 제보"
 labels: ["bug"]
 body:
-  - type: input
+  - type: textarea
     id: parent_epic
     attributes:
       label: 상위 Epic
-      placeholder: "#이슈번호 (없으면 비워두세요)"
+      placeholder: "#을 입력하면 이슈를 검색할 수 있습니다 (없으면 비워두세요)"
 
   - type: textarea
     id: why
