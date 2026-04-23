@@ -21,15 +21,15 @@ class GeminiExtractionResultTest {
     }
 
     @Test
-    fun `isProductPage 가 true 라도 name 이 비어 있으면 missingName 예외를 던진다`() {
+    fun `name 이 비어 있어도 Product 로 변환되며 name 은 null 로 정규화된다`() {
         val result = GeminiExtractionResult(
             isProductPage = true,
             name = "   ",
         )
 
-        assertFailsWith<ProductExtractionException> {
-            result.toProduct()
-        }
+        val product = result.toProduct()
+
+        assertNull(product.name)
     }
 
     @Test
@@ -46,21 +46,17 @@ class GeminiExtractionResultTest {
         assertEquals(10_000, product.regularPrice)
         assertNull(product.discountedPrice)
         assertNull(product.imageUrl)
-        assertNull(product.brand)
     }
 
     @Test
-    fun `전 필드가 채워진 경우 그대로 Product 에 매핑된다`() {
+    fun `전 필드가 채워진 경우 그대로 Product 에 매핑되고 discountRate 는 서버에서 계산된다`() {
         val result = GeminiExtractionResult(
             isProductPage = true,
             name = "나이키 에어포스",
             regularPrice = 139_000,
             discountedPrice = 99_000,
-            discountRate = 28,
             currency = "KRW",
             imageUrl = "https://cdn.example.com/p/42.jpg",
-            brand = "Nike",
-            category = "신발",
         )
 
         val product = result.toProduct()
@@ -71,24 +67,47 @@ class GeminiExtractionResultTest {
         assertEquals(28, product.discountRate)
         assertEquals("KRW", product.currency)
         assertEquals("https://cdn.example.com/p/42.jpg", product.imageUrl)
-        assertEquals("Nike", product.brand)
-        assertEquals("신발", product.category)
     }
 
     @Test
-    fun `비어 있는 부가 필드 문자열은 null 로 정규화된다`() {
+    fun `비어 있는 문자열 필드는 null 로 정규화된다`() {
         val result = GeminiExtractionResult(
             isProductPage = true,
             name = "테스트",
             imageUrl = "",
-            brand = "   ",
-            category = "",
         )
 
         val product = result.toProduct()
 
         assertNull(product.imageUrl)
-        assertNull(product.brand)
-        assertNull(product.category)
+    }
+
+    @Test
+    fun `regularPrice 또는 discountedPrice 가 없으면 discountRate 는 null 이다`() {
+        val onlyRegular = GeminiExtractionResult(
+            isProductPage = true,
+            name = "상품",
+            regularPrice = 10_000,
+        )
+        assertNull(onlyRegular.toProduct().discountRate)
+
+        val onlyDiscounted = GeminiExtractionResult(
+            isProductPage = true,
+            name = "상품",
+            discountedPrice = 9_000,
+        )
+        assertNull(onlyDiscounted.toProduct().discountRate)
+    }
+
+    @Test
+    fun `할인가가 원가 이상이면 discountRate 는 null 이다`() {
+        val noDiscount = GeminiExtractionResult(
+            isProductPage = true,
+            name = "상품",
+            regularPrice = 10_000,
+            discountedPrice = 10_000,
+        )
+
+        assertNull(noDiscount.toProduct().discountRate)
     }
 }

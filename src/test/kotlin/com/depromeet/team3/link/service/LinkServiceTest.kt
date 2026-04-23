@@ -58,11 +58,8 @@ class LinkServiceTest {
             name = "나이키 에어포스",
             regularPrice = 139_000,
             discountedPrice = 99_000,
-            discountRate = 28,
             currency = "KRW",
             imageUrl = "https://cdn.example.com/p/42.jpg",
-            brand = "Nike",
-            category = "신발",
         )
 
         val product = linkService.register(url)

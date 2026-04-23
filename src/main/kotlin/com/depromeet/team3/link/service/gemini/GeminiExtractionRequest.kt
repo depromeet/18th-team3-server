@@ -49,17 +49,14 @@ data class GeminiExtractionRequest(
             3. regularPrice (integer): The original (pre-discount) price. Remove currency symbols, commas, decimals.
                If only a single price is shown (no discount), put it here.
             4. discountedPrice (integer): The final discounted price. null if no discount is shown.
-            5. discountRate (integer): Discount percentage as an integer (e.g. 30 for 30%). null if not shown.
-            6. currency (string): ISO 4217 code (KRW, USD, JPY, EUR, etc.). Infer from page language/locale if ambiguous.
-            7. imageUrl (string): ABSOLUTE URL of the primary product image. Prefer og:image meta tag,
+            5. currency (string): ISO 4217 code (KRW, USD, JPY, EUR, etc.). Infer from page language/locale if ambiguous.
+            6. imageUrl (string): ABSOLUTE URL of the primary product image. Prefer og:image meta tag,
                fallback to the main product image. Resolve relative URLs against the page URL.
-            8. brand (string): Brand or manufacturer name. null if not shown.
-            9. category (string): Category text (e.g. "식품", "의류", "전자기기"). Prefer explicit breadcrumb/tag
-               text; otherwise infer from context. null if completely unclear.
 
             **Price rules**:
             - Single price, no discount indicator → regularPrice only, discountedPrice null.
             - Both original and sale prices visible → regularPrice = original, discountedPrice = sale.
+            - Do NOT extract discount rate. The server computes it from regularPrice and discountedPrice.
 
             Respond with JSON only, matching the provided schema. Handle any language.
         """.trimIndent()
@@ -71,11 +68,8 @@ data class GeminiExtractionRequest(
                 "name" to Schema(type = SchemaType.STRING, nullable = true),
                 "regularPrice" to Schema(type = SchemaType.INTEGER, nullable = true),
                 "discountedPrice" to Schema(type = SchemaType.INTEGER, nullable = true),
-                "discountRate" to Schema(type = SchemaType.INTEGER, nullable = true),
                 "currency" to Schema(type = SchemaType.STRING, nullable = true),
                 "imageUrl" to Schema(type = SchemaType.STRING, nullable = true),
-                "brand" to Schema(type = SchemaType.STRING, nullable = true),
-                "category" to Schema(type = SchemaType.STRING, nullable = true),
             ),
             required = listOf("isProductPage"),
         )

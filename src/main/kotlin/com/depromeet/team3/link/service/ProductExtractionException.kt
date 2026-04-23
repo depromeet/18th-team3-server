@@ -19,13 +19,5 @@ class ProductExtractionException private constructor(
                 ErrorCategory.INVALID_INPUT,
                 HttpStatus.BAD_REQUEST,
             )
-
-        // 최소 식별자인 상품명조차 추출하지 못한 경우. partial 저장 정책에서도 이름은 필수.
-        fun missingName(): ProductExtractionException =
-            ProductExtractionException(
-                "상품명을 추출하지 못해 등록할 수 없습니다.",
-                ErrorCategory.INVALID_INPUT,
-                HttpStatus.UNPROCESSABLE_ENTITY,
-            )
     }
 }
