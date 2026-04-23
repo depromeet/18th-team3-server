@@ -18,11 +18,22 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 우선순위
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
   - type: input
     id: start_date
     attributes:
       label: 시작일
-      placeholder: "YYYY-MM-DD"
+      placeholder: "MMDD (예: 0423)"
     validations:
       required: true
 
@@ -30,6 +41,6 @@ body:
     id: due_date
     attributes:
       label: 마감일
-      placeholder: "YYYY-MM-DD"
+      placeholder: "MMDD (예: 0430)"
     validations:
       required: true

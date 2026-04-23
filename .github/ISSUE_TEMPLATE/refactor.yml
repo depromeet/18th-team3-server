@@ -24,8 +24,19 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 우선순위
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
   - type: input
     id: due_date
     attributes:
       label: 마감일
-      placeholder: "YYYY-MM-DD (없으면 비워두세요)"
+      placeholder: "MMDD (없으면 비워두세요)"

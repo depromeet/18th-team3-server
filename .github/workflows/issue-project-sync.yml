@@ -34,13 +34,14 @@ jobs:
 
           echo "Added to project. Item ID: $ITEM_ID"
 
-          # 프로젝트 필드 ID 조회 (시작일, 마감일)
+          # 프로젝트 필드 ID 조회 (날짜, 우선순위)
           FIELDS=$(gh api graphql -f query='{
             organization(login: "depromeet") {
               projectV2(number: 99) {
                 fields(first: 30) {
                   nodes {
                     ... on ProjectV2Field { id name dataType }
+                    ... on ProjectV2SingleSelectField { id name options { id name } }
                   }
                 }
               }
@@ -49,45 +50,50 @@ jobs:
 
           START_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Start date" and .dataType == "DATE") | .id')
           DUE_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Target date" and .dataType == "DATE") | .id')
-          echo "START_FIELD=$START_FIELD DUE_FIELD=$DUE_FIELD"
+          PRIORITY_FIELD_ID=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Priority") | .id')
+          echo "START_FIELD=$START_FIELD DUE_FIELD=$DUE_FIELD PRIORITY_FIELD_ID=$PRIORITY_FIELD_ID"
 
-          # 이슈 본문에서 날짜 파싱 (YYYY-MM-DD 또는 YYYYMMDD 허용)
+          # 이슈 본문에서 날짜 파싱 (MMDD → YYYY-MM-DD 자동 변환, YYYY-MM-DD / YYYYMMDD도 허용)
+          CURRENT_YEAR=$(date +%Y)
           normalize_date() {
             local raw
-            raw=$(echo "$1" | grep -A3 "^### $2" | grep -E "^[0-9]{4}-?[0-9]{2}-?[0-9]{2}" | head -1 | tr -d '[:space:]')
-            if [[ "$raw" =~ ^([0-9]{4})([0-9]{2})([0-9]{2})$ ]]; then
-              echo "${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
-            else
+            raw=$(echo "$1" | grep -A3 "^### $2" | grep -E "^[0-9]+" | head -1 | tr -d '[:space:]')
+            if [[ "$raw" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})$ ]]; then
               echo "$raw"
+            elif [[ "$raw" =~ ^([0-9]{4})([0-9]{2})([0-9]{2})$ ]]; then
+              echo "${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
+            elif [[ "$raw" =~ ^([0-9]{2})([0-9]{2})$ ]]; then
+              echo "${CURRENT_YEAR}-${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
             fi
           }
           START_DATE=$(normalize_date "$ISSUE_BODY" "시작일")
           DUE_DATE=$(normalize_date "$ISSUE_BODY" "마감일")
           echo "START_DATE=$START_DATE DUE_DATE=$DUE_DATE"
 
-          # 시작일 업데이트
-          if [[ -n "$START_DATE" && -n "$START_FIELD" ]]; then
-            gh api graphql \
-              -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$val:Date!) {
-                updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{date:$val}}) {
-                  projectV2Item { id }
-                }
-              }' \
-              -f pid="$PROJECT_ID" -f iid="$ITEM_ID" -f fid="$START_FIELD" -f val="$START_DATE"
-            echo "Start date set: $START_DATE"
-          fi
+          # 우선순위 파싱
+          PRIORITY_LABEL=$(echo "$ISSUE_BODY" | grep -A3 "^### 우선순위" | grep -vE "^###|^$" | head -1 | tr -d '[:space:]')
+          PRIORITY_OPTION_ID=$(echo "$FIELDS" | jq -r --arg p "$PRIORITY_LABEL" '.[] | select(.name == "Priority") | .options[]? | select(.name == $p) | .id')
+          echo "PRIORITY=$PRIORITY_LABEL PRIORITY_OPTION_ID=$PRIORITY_OPTION_ID"
 
-          # 마감일 업데이트
-          if [[ -n "$DUE_DATE" && -n "$DUE_FIELD" ]]; then
+          update_field() {
+            local fid=$1 val_key=$2 val=$3
+            [[ -z "$fid" || -z "$val" ]] && return
             gh api graphql \
-              -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$val:Date!) {
-                updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{date:$val}}) {
+              -f query="mutation(\$pid:ID!,\$iid:ID!,\$fid:ID!,\$val:$4!) {
+                updateProjectV2ItemFieldValue(input:{projectId:\$pid,itemId:\$iid,fieldId:\$fid,value:{$val_key:\$val}}) {
                   projectV2Item { id }
                 }
-              }' \
-              -f pid="$PROJECT_ID" -f iid="$ITEM_ID" -f fid="$DUE_FIELD" -f val="$DUE_DATE"
-            echo "Due date set: $DUE_DATE"
-          fi
+              }" \
+              -f pid="$PROJECT_ID" -f iid="$ITEM_ID" -f fid="$fid" -f val="$val"
+          }
+
+          update_field "$START_FIELD"        "date"                   "$START_DATE"          "Date"
+          update_field "$DUE_FIELD"          "date"                   "$DUE_DATE"            "Date"
+          update_field "$PRIORITY_FIELD_ID"  "singleSelectOptionId"   "$PRIORITY_OPTION_ID"  "String"
+
+          [[ -n "$START_DATE" ]]        && echo "Start date set: $START_DATE"
+          [[ -n "$DUE_DATE" ]]          && echo "Due date set: $DUE_DATE"
+          [[ -n "$PRIORITY_OPTION_ID" ]] && echo "Priority set: $PRIORITY_LABEL"
 
   check-parent-epic:
     runs-on: ubuntu-latest
