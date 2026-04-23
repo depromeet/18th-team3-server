@@ -49,10 +49,21 @@ jobs:
 
           START_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Start date" and .dataType == "DATE") | .id')
           DUE_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Target date" and .dataType == "DATE") | .id')
+          echo "START_FIELD=$START_FIELD DUE_FIELD=$DUE_FIELD"
 
-          # 이슈 본문에서 날짜 파싱
-          START_DATE=$(echo "$ISSUE_BODY" | grep -A3 "^### 시작일" | grep -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1 | tr -d '[:space:]')
-          DUE_DATE=$(echo "$ISSUE_BODY" | grep -A3 "^### 마감일" | grep -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1 | tr -d '[:space:]')
+          # 이슈 본문에서 날짜 파싱 (YYYY-MM-DD 또는 YYYYMMDD 허용)
+          normalize_date() {
+            local raw
+            raw=$(echo "$1" | grep -A3 "^### $2" | grep -E "^[0-9]{4}-?[0-9]{2}-?[0-9]{2}" | head -1 | tr -d '[:space:]')
+            if [[ "$raw" =~ ^([0-9]{4})([0-9]{2})([0-9]{2})$ ]]; then
+              echo "${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
+            else
+              echo "$raw"
+            fi
+          }
+          START_DATE=$(normalize_date "$ISSUE_BODY" "시작일")
+          DUE_DATE=$(normalize_date "$ISSUE_BODY" "마감일")
+          echo "START_DATE=$START_DATE DUE_DATE=$DUE_DATE"
 
           # 시작일 업데이트
           if [[ -n "$START_DATE" && -n "$START_FIELD" ]]; then
