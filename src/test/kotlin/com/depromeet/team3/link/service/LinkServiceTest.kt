@@ -7,25 +7,16 @@ import kotlin.test.assertFailsWith
 
 class LinkServiceTest {
 
-    private val stubFetcher = object : PageFetcher {
-        var lastUrl: String? = null
-        var stubbedHtml: String = "<html></html>"
-        override fun fetch(url: String): PageContent {
-            lastUrl = url
-            return PageContent(url = url, html = stubbedHtml)
-        }
-    }
-
     private val stubExtractor = object : ProductExtractor {
-        var lastPage: PageContent? = null
+        var lastUrl: String? = null
         var stubbedProduct: Product = Product(name = "우유")
-        override fun extract(page: PageContent): Product {
-            lastPage = page
+        override fun extract(url: String): Product {
+            lastUrl = url
             return stubbedProduct
         }
     }
 
-    private val linkService = LinkService(stubFetcher, stubExtractor)
+    private val linkService = LinkService(stubExtractor)
 
     @Test
     fun `URL 이 비어 있으면 IllegalArgumentException 을 던진다`() {
@@ -52,7 +43,7 @@ class LinkServiceTest {
     }
 
     @Test
-    fun `정상 URL 은 Fetcher 와 Extractor 를 순서대로 호출하고 결과 Product 를 반환한다`() {
+    fun `정상 URL 은 Extractor 에 전달되고 결과 Product 를 반환한다`() {
         val url = "https://shop.example.com/products/42"
         stubExtractor.stubbedProduct = Product(
             name = "나이키 에어포스",
@@ -64,18 +55,17 @@ class LinkServiceTest {
 
         val product = linkService.register(url)
 
-        assertEquals(url, stubFetcher.lastUrl)
-        assertEquals(url, stubExtractor.lastPage?.url)
+        assertEquals(url, stubExtractor.lastUrl)
         assertEquals("나이키 에어포스", product.name)
         assertEquals(99_000, product.discountedPrice)
     }
 
     @Test
-    fun `앞뒤 공백은 제거한 채 Fetcher 에 전달된다`() {
+    fun `앞뒤 공백은 제거한 채 Extractor 에 전달된다`() {
         val url = "https://shop.example.com/products/42"
 
         linkService.register("  $url  ")
 
-        assertEquals(url, stubFetcher.lastUrl)
+        assertEquals(url, stubExtractor.lastUrl)
     }
 }

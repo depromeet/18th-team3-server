@@ -16,4 +16,4 @@ gemini:
   # `.env.test` 가 없으면 dummy 값으로 기동 검증만 통과시키고 실제 API 호출 테스트는
   # 400 으로 자연스럽게 실패하도록 둔다.
   api-key: ${GEMINI_API_KEY:test-dummy-key}
-  model: gemini-2.5-flash
+  model: gemini-3-flash-preview

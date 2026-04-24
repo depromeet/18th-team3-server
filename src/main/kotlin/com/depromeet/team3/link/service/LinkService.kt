@@ -7,7 +7,6 @@ import java.net.URI
 
 @Service
 class LinkService(
-    private val pageFetcher: PageFetcher,
     private val productExtractor: ProductExtractor,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -16,20 +15,11 @@ class LinkService(
         val cleaned = validateUrl(url)
 
         val started = System.nanoTime()
-        val page = pageFetcher.fetch(cleaned)
-        val fetchedAt = System.nanoTime()
+        val product = productExtractor.extract(cleaned)
+        val elapsedMs = (System.nanoTime() - started) / 1_000_000
 
-        val product = productExtractor.extract(page)
-        val extractedAt = System.nanoTime()
-
-        // sync/async 전환 결정을 위한 단계별 latency 측정 로그.
-        log.info(
-            "link register latency: fetch={}ms extract={}ms total={}ms url={}",
-            (fetchedAt - started) / 1_000_000,
-            (extractedAt - fetchedAt) / 1_000_000,
-            (extractedAt - started) / 1_000_000,
-            cleaned,
-        )
+        // sync/async 전환 결정을 위한 latency 측정 로그. url_context 는 fetch+추론이 합쳐져 있어 분리 측정 불가.
+        log.info("link register latency: total={}ms url={}", elapsedMs, cleaned)
 
         return product
     }

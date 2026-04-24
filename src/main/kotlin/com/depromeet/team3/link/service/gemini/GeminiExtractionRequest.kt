@@ -1,12 +1,21 @@
 package com.depromeet.team3.link.service.gemini
 
+import com.fasterxml.jackson.annotation.JsonInclude
+
+// Gemini JSON Schema 파서는 `"properties": null` 같은 잉여 null 필드를 스키마 위반으로 취급한다.
+// 직렬화 단계에서 null 필드를 전부 생략해 요청 페이로드를 최소한의 형태로 유지한다.
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class GeminiExtractionRequest(
     val generationConfig: GenerationConfig,
     val contents: List<Content>,
+    val tools: List<Tool>,
 ) {
     data class GenerationConfig(
         val responseMimeType: String,
-        val responseSchema: Schema,
+        // Gemini 3 에서 tools 와 구조화 출력을 함께 쓰려면 구식 responseSchema 가 아닌 responseJsonSchema 를 사용.
+        // 내부 스키마 형식은 OpenAPI-ish (소문자 type + nullable:true) 를 Gemini 가 받아준다.
+        // JSON Schema 표준의 type 배열 표기(["string","null"]) 는 현 시점에 거부되므로 쓰지 않는다.
+        val responseJsonSchema: JsonSchema,
     )
 
     data class Content(
@@ -17,27 +26,26 @@ data class GeminiExtractionRequest(
         val text: String,
     )
 
-    data class Schema(
-        val type: SchemaType,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    data class JsonSchema(
+        val type: String,
         val description: String? = null,
-        val properties: Map<String, Schema>? = null,
-        val items: Schema? = null,
+        val properties: Map<String, JsonSchema>? = null,
+        val items: JsonSchema? = null,
         val required: List<String>? = null,
         val nullable: Boolean? = null,
     )
 
-    enum class SchemaType {
-        OBJECT,
-        ARRAY,
-        STRING,
-        INTEGER,
-        BOOLEAN,
-    }
+    // url_context tool 활성화 시 Gemini 가 직접 URL 을 fetch 해 콘텐츠를 in-context 로 참조한다.
+    // 빈 객체 `{}` 로 직렬화되어야 하므로 Map 으로 표현.
+    data class Tool(
+        val urlContext: Map<String, Any> = emptyMap(),
+    )
 
     companion object {
         private val SYSTEM_PROMPT = """
-            You are a product information extractor. Given the HTML of a product page and its URL,
-            extract information for the MAIN product of the page.
+            You are a product information extractor. Given the URL of a product page,
+            fetch the page (via the url_context tool) and extract information for the MAIN product.
 
             Ignore related products, recommended items, advertisements, and sidebar content.
             Focus on the primary product that the page is about.
@@ -61,33 +69,36 @@ data class GeminiExtractionRequest(
             Respond with JSON only, matching the provided schema. Handle any language.
         """.trimIndent()
 
-        private val EXTRACTION_SCHEMA = Schema(
-            type = SchemaType.OBJECT,
+        private val EXTRACTION_SCHEMA = JsonSchema(
+            type = "object",
             properties = mapOf(
-                "isProductPage" to Schema(type = SchemaType.BOOLEAN),
-                "name" to Schema(type = SchemaType.STRING, nullable = true),
-                "regularPrice" to Schema(type = SchemaType.INTEGER, nullable = true),
-                "discountedPrice" to Schema(type = SchemaType.INTEGER, nullable = true),
-                "currency" to Schema(type = SchemaType.STRING, nullable = true),
-                "imageUrl" to Schema(type = SchemaType.STRING, nullable = true),
+                "isProductPage" to JsonSchema(type = "boolean"),
+                "name" to JsonSchema(type = "string", nullable = true),
+                "regularPrice" to JsonSchema(type = "integer", nullable = true),
+                "discountedPrice" to JsonSchema(type = "integer", nullable = true),
+                "currency" to JsonSchema(type = "string", nullable = true),
+                "imageUrl" to JsonSchema(type = "string", nullable = true),
             ),
             required = listOf("isProductPage"),
         )
 
-        fun forHtmlExtraction(url: String, html: String): GeminiExtractionRequest =
+        private val URL_CONTEXT_TOOL = Tool()
+
+        fun forUrlExtraction(url: String): GeminiExtractionRequest =
             GeminiExtractionRequest(
                 generationConfig = GenerationConfig(
                     responseMimeType = "application/json",
-                    responseSchema = EXTRACTION_SCHEMA,
+                    responseJsonSchema = EXTRACTION_SCHEMA,
                 ),
                 contents = listOf(
                     Content(
                         parts = listOf(
                             Part(text = SYSTEM_PROMPT),
-                            Part(text = "URL: $url\n\nHTML:\n$html"),
+                            Part(text = "URL: $url"),
                         ),
                     ),
                 ),
+                tools = listOf(URL_CONTEXT_TOOL),
             )
     }
 }
