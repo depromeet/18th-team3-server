@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class GuestControllerTest {
@@ -31,25 +32,27 @@ class GuestControllerTest {
     }
 
     @Test
-    fun `POST api v1 guests 는 발급된 UUID 를 guestUUID 필드로 반환한다`() {
-        val expectedUuid = "11111111-2222-3333-4444-555555555555"
+    fun `POST api v1 guests 는 발급된 UUID 를 guestId 필드로 반환한다`() {
+        val expectedUuid = UUID.fromString("11111111-2222-3333-4444-555555555555")
         given(guestService.issueGuestId()).willReturn(expectedUuid)
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.guestUUID").value(expectedUuid))
+            .andExpect(jsonPath("$.guestId").value(expectedUuid.toString()))
     }
 
     @Test
     fun `POST api v1 guests 는 매 요청마다 GuestService 를 호출해 새 UUID 를 받아온다`() {
-        given(guestService.issueGuestId()).willReturn("first-uuid", "second-uuid")
+        val first = UUID.randomUUID()
+        val second = UUID.randomUUID()
+        given(guestService.issueGuestId()).willReturn(first, second)
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.guestUUID").value("first-uuid"))
+            .andExpect(jsonPath("$.guestId").value(first.toString()))
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.guestUUID").value("second-uuid"))
+            .andExpect(jsonPath("$.guestId").value(second.toString()))
     }
 }

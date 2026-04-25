@@ -21,17 +21,10 @@ class GuestServiceTest {
     private val guestService = GuestService(repository)
 
     @Test
-    fun `issueGuestId 는 UUID 형식의 문자열을 반환한다`() {
+    fun `issueGuestId 는 UUID 를 반환한다`() {
         val id = guestService.issueGuestId()
 
-        UUID.fromString(id)
-    }
-
-    @Test
-    fun `issueGuestId 는 발급한 UUID 를 저장소에 저장한다`() {
-        val id = guestService.issueGuestId()
-
-        assertEquals(listOf(id), repository.saved.map { it.toString() })
+        assertEquals(listOf(id), repository.saved)
     }
 
     @Test
@@ -42,6 +35,6 @@ class GuestServiceTest {
 
         val ids = setOf(first, second, third)
         assertEquals(3, ids.size)
-        assertEquals(listOf(first, second, third), repository.saved.map { it.toString() })
+        assertEquals(listOf(first, second, third), repository.saved)
     }
 }
