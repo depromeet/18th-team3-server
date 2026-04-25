@@ -40,6 +40,9 @@ dependencies {
 	implementation("org.flywaydb:flyway-mysql")
 	runtimeOnly("com.mysql:mysql-connector-j")
 
+	// Spring Boot 4.0.5 / Jackson 3 호환 라인. 2.x 라인은 Boot 3 / Jackson 2 전용이라 사용 불가.
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
