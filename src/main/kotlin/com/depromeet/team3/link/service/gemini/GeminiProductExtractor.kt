@@ -3,6 +3,7 @@ package com.depromeet.team3.link.service.gemini
 import com.depromeet.team3.common.domain.Product
 import com.depromeet.team3.link.service.ProductExtractor
 import org.slf4j.LoggerFactory
+import java.net.URI
 import org.springframework.http.MediaType
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
@@ -31,7 +32,7 @@ class GeminiProductExtractor(
         )
         .build()
 
-    override fun extract(url: String): Product {
+    override fun extract(url: URI): Product {
         val request = GeminiExtractionRequest.forUrlExtraction(url)
 
         // TODO: Gemini API 의 간헐적 5xx/타임아웃 대응 재시도 로직 필요. RETRYABLE 카테고리 예외 대상.

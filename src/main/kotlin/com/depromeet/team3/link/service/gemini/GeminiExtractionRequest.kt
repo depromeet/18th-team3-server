@@ -1,6 +1,7 @@
 package com.depromeet.team3.link.service.gemini
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import java.net.URI
 
 // Gemini JSON Schema 파서는 `"properties": null` 같은 잉여 null 필드를 스키마 위반으로 취급한다.
 // 직렬화 단계에서 null 필드를 전부 생략해 요청 페이로드를 최소한의 형태로 유지한다.
@@ -37,10 +38,12 @@ data class GeminiExtractionRequest(
     )
 
     // url_context tool 활성화 시 Gemini 가 직접 URL 을 fetch 해 콘텐츠를 in-context 로 참조한다.
-    // 빈 객체 `{}` 로 직렬화되어야 하므로 Map 으로 표현.
+    // 옵션 필드가 비어 있어 Gemini 가 기본 동작으로 fetch 하도록 빈 객체 `{}` 로 직렬화한다.
     data class Tool(
-        val urlContext: Map<String, Any> = emptyMap(),
+        val urlContext: UrlContextOptions = UrlContextOptions,
     )
+
+    data object UrlContextOptions
 
     companion object {
         private val SYSTEM_PROMPT = """
@@ -84,7 +87,7 @@ data class GeminiExtractionRequest(
 
         private val URL_CONTEXT_TOOL = Tool()
 
-        fun forUrlExtraction(url: String): GeminiExtractionRequest =
+        fun forUrlExtraction(url: URI): GeminiExtractionRequest =
             GeminiExtractionRequest(
                 generationConfig = GenerationConfig(
                     responseMimeType = "application/json",

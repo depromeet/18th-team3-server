@@ -2,10 +2,12 @@ package com.depromeet.team3.link.service.gemini
 
 import com.depromeet.team3.link.service.ProductExtractionException
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import kotlin.test.assertNotNull
+import java.net.URI
+import java.util.concurrent.TimeUnit
 
 /**
  * 실제 Gemini API 를 호출하는 통합 테스트.
@@ -20,19 +22,16 @@ class GeminiProductExtractorTest {
     lateinit var extractor: GeminiProductExtractor
 
     @Test
+    @Timeout(value = 90, unit = TimeUnit.SECONDS)
     fun `Gemini url_context end-to-end 호출이 살아 있고 응답을 구조화해 돌려준다`() {
-        // 외부 URL 이라 Gemini 판단(Product vs notProductPage)이 유동적이다.
-        // smoke 수준에서는 두 결과 모두 "url_context fetch + structured output 경로가 정상 동작" 의 증거.
-        val url = "https://www.apple.com/shop/buy-iphone/iphone-15"
+        // 외부 URL 에 대한 Gemini 의 isProductPage 판정이 유동적이라 Product 반환과
+        // notProductPage 예외 모두 url_context fetch + structured output 경로의 정상 동작 신호로 본다.
+        val url = URI.create("https://www.apple.com/shop/buy-iphone/iphone-15")
 
-        runCatching { extractor.extract(url) }
-            .fold(
-                onSuccess = { product -> assertNotNull(product) },
-                onFailure = { e ->
-                    require(e is ProductExtractionException) {
-                        "예상 외 예외: ${e.javaClass.simpleName} - ${e.message}"
-                    }
-                },
-            )
+        try {
+            extractor.extract(url)
+        } catch (e: ProductExtractionException) {
+            // 상품 페이지가 아니라고 판단된 경우. Gemini 가 응답을 구조화해 돌려줬다는 증거이므로 통과.
+        }
     }
 }

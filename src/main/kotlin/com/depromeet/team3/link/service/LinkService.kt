@@ -11,30 +11,33 @@ class LinkService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun register(url: String): Product {
-        val cleaned = validateUrl(url)
+    fun register(rawUrl: String): Product {
+        val url = parse(rawUrl)
 
         val started = System.nanoTime()
-        val product = productExtractor.extract(cleaned)
+        val product = productExtractor.extract(url)
         val elapsedMs = (System.nanoTime() - started) / 1_000_000
 
         // sync/async 전환 결정을 위한 latency 측정 로그. url_context 는 fetch+추론이 합쳐져 있어 분리 측정 불가.
-        log.info("link register latency: total={}ms url={}", elapsedMs, cleaned)
+        log.info("link register latency: total={}ms url={}", elapsedMs, url)
 
         return product
     }
 
-    private fun validateUrl(raw: String): String {
+    private fun parse(raw: String): URI {
         val trimmed = raw.trim()
         require(trimmed.isNotBlank()) { "URL이 비어 있습니다." }
-        require(trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-            "http/https URL만 허용합니다."
-        }
-        try {
+        val uri = try {
             URI.create(trimmed)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("유효한 URL 형식이 아닙니다: $trimmed", e)
         }
-        return trimmed
+        // URI.create 는 스킴 없는 "example.com/product" 도 relative URI 로 통과시키므로 명시 검증.
+        require(uri.scheme in HTTP_SCHEMES) { "http/https URL만 허용합니다." }
+        return uri
+    }
+
+    companion object {
+        private val HTTP_SCHEMES = setOf("http", "https")
     }
 }

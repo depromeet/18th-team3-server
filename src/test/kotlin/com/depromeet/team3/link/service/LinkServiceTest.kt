@@ -2,15 +2,16 @@ package com.depromeet.team3.link.service
 
 import com.depromeet.team3.common.domain.Product
 import org.junit.jupiter.api.Test
+import java.net.URI
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class LinkServiceTest {
 
     private val stubExtractor = object : ProductExtractor {
-        var lastUrl: String? = null
+        var lastUrl: URI? = null
         var stubbedProduct: Product = Product(name = "우유")
-        override fun extract(url: String): Product {
+        override fun extract(url: URI): Product {
             lastUrl = url
             return stubbedProduct
         }
@@ -44,7 +45,7 @@ class LinkServiceTest {
 
     @Test
     fun `정상 URL 은 Extractor 에 전달되고 결과 Product 를 반환한다`() {
-        val url = "https://shop.example.com/products/42"
+        val raw = "https://shop.example.com/products/42"
         stubExtractor.stubbedProduct = Product(
             name = "나이키 에어포스",
             regularPrice = 139_000,
@@ -53,19 +54,19 @@ class LinkServiceTest {
             imageUrl = "https://cdn.example.com/p/42.jpg",
         )
 
-        val product = linkService.register(url)
+        val product = linkService.register(raw)
 
-        assertEquals(url, stubExtractor.lastUrl)
+        assertEquals(URI.create(raw), stubExtractor.lastUrl)
         assertEquals("나이키 에어포스", product.name)
         assertEquals(99_000, product.discountedPrice)
     }
 
     @Test
     fun `앞뒤 공백은 제거한 채 Extractor 에 전달된다`() {
-        val url = "https://shop.example.com/products/42"
+        val raw = "https://shop.example.com/products/42"
 
-        linkService.register("  $url  ")
+        linkService.register("  $raw  ")
 
-        assertEquals(url, stubExtractor.lastUrl)
+        assertEquals(URI.create(raw), stubExtractor.lastUrl)
     }
 }
