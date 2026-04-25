@@ -40,4 +40,9 @@ jobs:
               --name team3-server \
               -p 8080:8080 \
               -e GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_PORT=${{ secrets.DB_PORT }} \
+              -e DB_NAME=${{ secrets.DB_NAME }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               ${{ secrets.DOCKERHUB_USERNAME }}/team3-server:latest
