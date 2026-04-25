@@ -19,14 +19,31 @@ repositories {
 	mavenCentral()
 }
 
+// Spring Boot 4.0.5 의 platform 은 testcontainers 코어 2.0.x 만 포함하고
+// junit-jupiter / mysql 모듈은 1.21.x 라인이 최신이라 BOM 불일치가 난다.
+// 모듈이 따라올 때까지 testcontainers BOM 을 1.21.4 로 명시 고정.
+val testcontainersVersion = "1.21.4"
+
+dependencyManagement {
+	imports {
+		mavenBom("org.testcontainers:testcontainers-bom:$testcontainersVersion")
+	}
+}
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("tools.jackson.module:jackson-module-kotlin")
-	runtimeOnly("com.h2database:h2")
+
+	implementation("org.springframework.boot:spring-boot-starter-flyway")
+	implementation("org.flywaydb:flyway-mysql")
 	runtimeOnly("com.mysql:mysql-connector-j")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:mysql")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
