@@ -1,18 +1,18 @@
 package com.depromeet.team3.link.service
 
 import com.depromeet.team3.common.domain.Product
+import com.depromeet.team3.link.domain.ProductLink
 import org.junit.jupiter.api.Test
-import java.net.URI
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class LinkServiceTest {
 
     private val stubExtractor = object : ProductExtractor {
-        var lastUrl: URI? = null
+        var lastLink: ProductLink? = null
         var stubbedProduct: Product = Product(name = "우유")
-        override fun extract(url: URI): Product {
-            lastUrl = url
+        override fun extract(link: ProductLink): Product {
+            lastLink = link
             return stubbedProduct
         }
     }
@@ -54,11 +54,12 @@ class LinkServiceTest {
             imageUrl = "https://cdn.example.com/p/42.jpg",
         )
 
-        val product = linkService.register(raw)
+        val extracted = linkService.register(raw)
 
-        assertEquals(URI.create(raw), stubExtractor.lastUrl)
-        assertEquals("나이키 에어포스", product.name)
-        assertEquals(99_000, product.discountedPrice)
+        assertEquals(ProductLink.parse(raw), stubExtractor.lastLink)
+        assertEquals(ProductLink.parse(raw), extracted.link)
+        assertEquals("나이키 에어포스", extracted.product.name)
+        assertEquals(99_000, extracted.product.discountedPrice)
     }
 
     @Test
@@ -67,6 +68,6 @@ class LinkServiceTest {
 
         linkService.register("  $raw  ")
 
-        assertEquals(URI.create(raw), stubExtractor.lastUrl)
+        assertEquals(ProductLink.parse(raw), stubExtractor.lastLink)
     }
 }

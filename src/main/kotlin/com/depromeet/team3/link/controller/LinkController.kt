@@ -15,7 +15,7 @@ class LinkController(
 ) {
     @PostMapping
     fun register(@RequestBody request: LinkRegisterRequest): LinkRegisterResponse {
-        val product = linkService.register(request.url)
-        return LinkRegisterResponse.from(product)
+        val extracted = linkService.register(request.url)
+        return LinkRegisterResponse.from(extracted.product)
     }
 }
