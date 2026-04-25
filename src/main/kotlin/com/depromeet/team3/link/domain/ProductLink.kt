@@ -18,7 +18,8 @@ value class ProductLink private constructor(val value: URI) {
                 throw IllegalArgumentException("유효한 URL 형식이 아닙니다: $trimmed", e)
             }
             // URI.create 는 스킴 없는 "example.com/product" 도 relative URI 로 통과시키므로 명시 검증.
-            require(uri.scheme in HTTP_SCHEMES) { "http/https URL만 허용합니다." }
+            // RFC 3986 은 scheme 을 case-insensitive 로 정의하므로 비교 전에 lowercase 정규화한다.
+            require(uri.scheme?.lowercase() in HTTP_SCHEMES) { "http/https URL만 허용합니다." }
             return ProductLink(uri)
         }
     }
