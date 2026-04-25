@@ -54,12 +54,11 @@ class LinkServiceTest {
             imageUrl = "https://cdn.example.com/p/42.jpg",
         )
 
-        val extracted = linkService.register(raw)
+        val product = linkService.register(raw)
 
         assertEquals(ProductLink.parse(raw), stubExtractor.lastLink)
-        assertEquals(ProductLink.parse(raw), extracted.link)
-        assertEquals("나이키 에어포스", extracted.product.name)
-        assertEquals(99_000, extracted.product.discountedPrice)
+        assertEquals("나이키 에어포스", product.name)
+        assertEquals(99_000, product.discountedPrice)
     }
 
     @Test
