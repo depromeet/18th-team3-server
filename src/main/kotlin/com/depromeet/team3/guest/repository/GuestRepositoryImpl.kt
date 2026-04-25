@@ -9,5 +9,5 @@ internal class GuestRepositoryImpl(
 ) : GuestRepository {
     override fun existsByUuid(uuid: String): Boolean = guestJpaRepository.existsById(uuid)
 
-    override fun save(guest: Guest): Guest = guestJpaRepository.save(guest)
+    override fun save(id: String): Guest = guestJpaRepository.save(Guest(id))
 }

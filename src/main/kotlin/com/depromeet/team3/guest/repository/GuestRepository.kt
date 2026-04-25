@@ -5,5 +5,5 @@ import com.depromeet.team3.guest.domain.Guest
 interface GuestRepository {
     fun existsByUuid(uuid: String): Boolean
 
-    fun save(guest: Guest): Guest
+    fun save(id: String): Guest
 }

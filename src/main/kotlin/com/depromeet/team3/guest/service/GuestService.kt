@@ -12,12 +12,12 @@ class GuestService(
 ) {
     @Transactional
     fun issueGuestUuid(): String {
-        var uuid: String
+        var id: String
         do {
-            uuid = UUID.randomUUID().toString()
-        } while (guestRepository.existsByUuid(uuid))
+            id = UUID.randomUUID().toString()
+        } while (guestRepository.existsByUuid(id))
 
-        guestRepository.save(Guest(uuid))
-        return uuid
+        guestRepository.save(id)
+        return id
     }
 }
