@@ -24,6 +24,7 @@ out/
 # Environment
 .env
 .env.test
+.env-local
 
 # Kotlin
 .kotlin/
