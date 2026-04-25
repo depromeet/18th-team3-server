@@ -9,9 +9,9 @@ import kotlin.test.assertEquals
 class GuestServiceTest {
 
     private class StubGuestRepository : GuestRepository {
-        val saved = mutableListOf<String>()
+        val saved = mutableListOf<UUID>()
 
-        override fun save(id: String): Guest {
+        override fun save(id: UUID): Guest {
             saved.add(id)
             return Guest(id)
         }
@@ -21,27 +21,27 @@ class GuestServiceTest {
     private val guestService = GuestService(repository)
 
     @Test
-    fun `issueGuestUuid 는 UUID 형식의 문자열을 반환한다`() {
-        val uuid = guestService.issueGuestUuid()
+    fun `issueGuestId 는 UUID 형식의 문자열을 반환한다`() {
+        val id = guestService.issueGuestId()
 
-        UUID.fromString(uuid)
+        UUID.fromString(id)
     }
 
     @Test
-    fun `issueGuestUuid 는 발급한 UUID 를 저장소에 저장한다`() {
-        val uuid = guestService.issueGuestUuid()
+    fun `issueGuestId 는 발급한 UUID 를 저장소에 저장한다`() {
+        val id = guestService.issueGuestId()
 
-        assertEquals(listOf(uuid), repository.saved)
+        assertEquals(listOf(id), repository.saved.map { it.toString() })
     }
 
     @Test
-    fun `issueGuestUuid 를 여러 번 호출하면 매번 새로운 UUID 가 발급된다`() {
-        val first = guestService.issueGuestUuid()
-        val second = guestService.issueGuestUuid()
-        val third = guestService.issueGuestUuid()
+    fun `issueGuestId 를 여러 번 호출하면 매번 새로운 UUID 가 발급된다`() {
+        val first = guestService.issueGuestId()
+        val second = guestService.issueGuestId()
+        val third = guestService.issueGuestId()
 
-        val uuids = setOf(first, second, third)
-        assertEquals(3, uuids.size)
-        assertEquals(listOf(first, second, third), repository.saved)
+        val ids = setOf(first, second, third)
+        assertEquals(3, ids.size)
+        assertEquals(listOf(first, second, third), repository.saved.map { it.toString() })
     }
 }

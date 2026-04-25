@@ -33,7 +33,7 @@ class GuestControllerTest {
     @Test
     fun `POST api v1 guests 는 발급된 UUID 를 guestUUID 필드로 반환한다`() {
         val expectedUuid = "11111111-2222-3333-4444-555555555555"
-        given(guestService.issueGuestUuid()).willReturn(expectedUuid)
+        given(guestService.issueGuestId()).willReturn(expectedUuid)
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
@@ -42,7 +42,7 @@ class GuestControllerTest {
 
     @Test
     fun `POST api v1 guests 는 매 요청마다 GuestService 를 호출해 새 UUID 를 받아온다`() {
-        given(guestService.issueGuestUuid()).willReturn("first-uuid", "second-uuid")
+        given(guestService.issueGuestId()).willReturn("first-uuid", "second-uuid")
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
