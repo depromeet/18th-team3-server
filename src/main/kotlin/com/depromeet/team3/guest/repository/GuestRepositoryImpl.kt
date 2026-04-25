@@ -4,7 +4,7 @@ import com.depromeet.team3.guest.domain.Guest
 import org.springframework.stereotype.Repository
 
 @Repository
-internal class GuestRepositoryImpl(
+class GuestRepositoryImpl(
     private val guestJpaRepository: GuestJpaRepository,
 ) : GuestRepository {
     override fun existsByUuid(uuid: String): Boolean = guestJpaRepository.existsById(uuid)
