@@ -18,7 +18,7 @@ class WishlistController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun register(@RequestBody request: WishlistRegisterRequest): WishlistRegisterResponse {
-        val saved = wishlistService.register(rawUrl = request.url, userId = request.userId)
-        return WishlistRegisterResponse.from(saved)
+        val result = wishlistService.register(rawUrl = request.url, guestId = request.guestId)
+        return WishlistRegisterResponse.from(result.wish, result.product)
     }
 }

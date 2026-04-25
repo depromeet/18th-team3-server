@@ -1,4 +1,4 @@
-package com.depromeet.team3.link.service.gemini
+package com.depromeet.team3.product.service.gemini
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

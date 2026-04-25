@@ -12,15 +12,15 @@ CREATE TABLE products (
     UNIQUE KEY uk_products_source_url (source_url(512))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE wishlists (
+CREATE TABLE wishes (
     id BIGINT NOT NULL AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
+    guest_id BINARY(16) NOT NULL,
     product_id BIGINT NOT NULL,
     snapshot_regular_price INT NULL,
     snapshot_discounted_price INT NULL,
     created_at DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_wishlists_user_product (user_id, product_id),
-    KEY idx_wishlists_user_id (user_id),
-    CONSTRAINT fk_wishlists_product FOREIGN KEY (product_id) REFERENCES products(id)
+    UNIQUE KEY uk_wishes_guest_product (guest_id, product_id),
+    KEY idx_wishes_guest_id (guest_id),
+    CONSTRAINT fk_wishes_product FOREIGN KEY (product_id) REFERENCES products(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

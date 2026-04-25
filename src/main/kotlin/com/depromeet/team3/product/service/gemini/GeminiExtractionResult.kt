@@ -1,7 +1,8 @@
-package com.depromeet.team3.link.service.gemini
+package com.depromeet.team3.product.service.gemini
 
-import com.depromeet.team3.common.domain.Product
-import com.depromeet.team3.link.service.ProductExtractionException
+import com.depromeet.team3.product.domain.Product
+import com.depromeet.team3.product.domain.ProductLink
+import com.depromeet.team3.product.service.ProductExtractionException
 
 data class GeminiExtractionResult(
     val isProductPage: Boolean,
@@ -11,9 +12,10 @@ data class GeminiExtractionResult(
     val currency: String? = null,
     val imageUrl: String? = null,
 ) {
-    fun toProduct(): Product {
+    fun toProduct(link: ProductLink): Product {
         if (!isProductPage) throw ProductExtractionException.notProductPage()
         return Product(
+            sourceUrl = link.toString(),
             name = name?.takeIf { it.isNotBlank() },
             regularPrice = regularPrice,
             discountedPrice = discountedPrice,

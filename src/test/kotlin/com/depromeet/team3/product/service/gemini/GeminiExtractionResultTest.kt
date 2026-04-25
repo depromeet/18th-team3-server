@@ -1,12 +1,15 @@
-package com.depromeet.team3.link.service.gemini
+package com.depromeet.team3.product.service.gemini
 
-import com.depromeet.team3.link.service.ProductExtractionException
+import com.depromeet.team3.product.domain.ProductLink
+import com.depromeet.team3.product.service.ProductExtractionException
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class GeminiExtractionResultTest {
+
+    private val link = ProductLink.parse("https://shop.example.com/products/42")
 
     @Test
     fun `isProductPage 가 false 이면 notProductPage 예외를 던진다`() {
@@ -16,7 +19,7 @@ class GeminiExtractionResultTest {
         )
 
         assertFailsWith<ProductExtractionException> {
-            result.toProduct()
+            result.toProduct(link)
         }
     }
 
@@ -27,7 +30,7 @@ class GeminiExtractionResultTest {
             name = "   ",
         )
 
-        val product = result.toProduct()
+        val product = result.toProduct(link)
 
         assertNull(product.name)
     }
@@ -40,7 +43,7 @@ class GeminiExtractionResultTest {
             regularPrice = 10_000,
         )
 
-        val product = result.toProduct()
+        val product = result.toProduct(link)
 
         assertEquals("테스트 상품", product.name)
         assertEquals(10_000, product.regularPrice)
@@ -59,7 +62,7 @@ class GeminiExtractionResultTest {
             imageUrl = "https://cdn.example.com/p/42.jpg",
         )
 
-        val product = result.toProduct()
+        val product = result.toProduct(link)
 
         assertEquals("나이키 에어포스", product.name)
         assertEquals(139_000, product.regularPrice)
@@ -67,6 +70,7 @@ class GeminiExtractionResultTest {
         assertEquals(28, product.discountRate)
         assertEquals("KRW", product.currency)
         assertEquals("https://cdn.example.com/p/42.jpg", product.imageUrl)
+        assertEquals(link.toString(), product.sourceUrl)
     }
 
     @Test
@@ -77,7 +81,7 @@ class GeminiExtractionResultTest {
             imageUrl = "",
         )
 
-        val product = result.toProduct()
+        val product = result.toProduct(link)
 
         assertNull(product.imageUrl)
     }
@@ -89,14 +93,14 @@ class GeminiExtractionResultTest {
             name = "상품",
             regularPrice = 10_000,
         )
-        assertNull(onlyRegular.toProduct().discountRate)
+        assertNull(onlyRegular.toProduct(link).discountRate)
 
         val onlyDiscounted = GeminiExtractionResult(
             isProductPage = true,
             name = "상품",
             discountedPrice = 9_000,
         )
-        assertNull(onlyDiscounted.toProduct().discountRate)
+        assertNull(onlyDiscounted.toProduct(link).discountRate)
     }
 
     @Test
@@ -108,6 +112,6 @@ class GeminiExtractionResultTest {
             discountedPrice = 10_000,
         )
 
-        assertNull(noDiscount.toProduct().discountRate)
+        assertNull(noDiscount.toProduct(link).discountRate)
     }
 }

@@ -1,4 +1,4 @@
-package com.depromeet.team3.link.service
+package com.depromeet.team3.product.service
 
 import com.depromeet.team3.common.exception.BaseException
 import com.depromeet.team3.common.exception.ErrorCategory

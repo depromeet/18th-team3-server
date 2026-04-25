@@ -1,51 +1,53 @@
 package com.depromeet.team3.wishlist.service
 
-import com.depromeet.team3.link.domain.ProductLink
-import com.depromeet.team3.link.service.LinkService
-import com.depromeet.team3.product.repository.ProductEntity
+import com.depromeet.team3.product.domain.Product
+import com.depromeet.team3.product.domain.ProductLink
 import com.depromeet.team3.product.repository.ProductJpaRepository
-import com.depromeet.team3.wishlist.repository.WishlistEntity
-import com.depromeet.team3.wishlist.repository.WishlistJpaRepository
+import com.depromeet.team3.product.service.ProductExtractor
+import com.depromeet.team3.wishlist.domain.Wish
+import com.depromeet.team3.wishlist.repository.WishJpaRepository
+import com.depromeet.team3.wishlist.service.dto.WishRegisterResult
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 class WishlistService(
-    private val linkService: LinkService,
+    private val productExtractor: ProductExtractor,
     private val productJpaRepository: ProductJpaRepository,
-    private val wishlistJpaRepository: WishlistJpaRepository,
+    private val wishJpaRepository: WishJpaRepository,
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @Transactional
-    fun register(rawUrl: String, userId: Long): WishlistEntity {
-        val product = linkService.register(rawUrl)
-        // ProductLink.parse 는 멱등이라 LinkService 내부 정규화와 동일한 결과를 보장한다.
-        val sourceUrl = ProductLink.parse(rawUrl).toString()
+    fun register(rawUrl: String, guestId: UUID): WishRegisterResult {
+        val link = ProductLink.parse(rawUrl)
+        val extracted = extractWithLatencyLog(link)
+        val product = productJpaRepository.findBySourceUrl(extracted.sourceUrl)
+            ?: productJpaRepository.save(extracted)
+        val productId = requireNotNull(product.id) { "Product id is null after save" }
 
-        val productEntity = productJpaRepository.findBySourceUrl(sourceUrl)
-            ?: productJpaRepository.save(
-                ProductEntity(
-                    sourceUrl = sourceUrl,
-                    name = product.name,
-                    regularPrice = product.regularPrice,
-                    discountedPrice = product.discountedPrice,
-                    currency = product.currency,
-                    imageUrl = product.imageUrl,
-                )
-            )
-
-        val productId = requireNotNull(productEntity.id) { "ProductEntity id is null after save" }
-
-        if (wishlistJpaRepository.existsByUserIdAndProductId(userId, productId)) {
-            throw WishlistAlreadyExistsException(userId = userId, productId = productId)
+        if (wishJpaRepository.existsByGuestIdAndProductId(guestId, productId)) {
+            throw WishAlreadyExistsException(guestId = guestId, productId = productId)
         }
 
-        return wishlistJpaRepository.save(
-            WishlistEntity(
-                userId = userId,
+        val wish = wishJpaRepository.save(
+            Wish(
+                guestId = guestId,
                 productId = productId,
                 snapshotRegularPrice = product.regularPrice,
                 snapshotDiscountedPrice = product.discountedPrice,
             )
         )
+        return WishRegisterResult(wish = wish, product = product)
+    }
+
+    private fun extractWithLatencyLog(link: ProductLink): Product {
+        val started = System.nanoTime()
+        val product = productExtractor.extract(link)
+        val elapsedMs = (System.nanoTime() - started) / 1_000_000
+        log.info("extract latency: total={}ms url={}", elapsedMs, link)
+        return product
     }
 }

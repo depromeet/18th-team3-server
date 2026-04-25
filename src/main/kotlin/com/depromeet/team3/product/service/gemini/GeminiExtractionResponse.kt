@@ -1,4 +1,4 @@
-package com.depromeet.team3.link.service.gemini
+package com.depromeet.team3.product.service.gemini
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 

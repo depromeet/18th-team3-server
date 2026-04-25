@@ -1,4 +1,4 @@
-package com.depromeet.team3.wishlist.repository
+package com.depromeet.team3.wishlist.domain
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -8,12 +8,13 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
+import java.util.UUID
 
 @Entity
-@Table(name = "wishlists")
-class WishlistEntity(
-    @Column(name = "user_id", nullable = false)
-    var userId: Long,
+@Table(name = "wishes")
+class Wish(
+    @Column(name = "guest_id", nullable = false, columnDefinition = "BINARY(16)")
+    var guestId: UUID,
 
     @Column(name = "product_id", nullable = false)
     var productId: Long,

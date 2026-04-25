@@ -1,8 +1,0 @@
-package com.depromeet.team3.link.service
-
-import com.depromeet.team3.common.domain.Product
-import com.depromeet.team3.link.domain.ProductLink
-
-interface ProductExtractor {
-    fun extract(link: ProductLink): Product
-}

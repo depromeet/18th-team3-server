@@ -1,4 +1,4 @@
-package com.depromeet.team3.link.domain
+package com.depromeet.team3.product.domain
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
