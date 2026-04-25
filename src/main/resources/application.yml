@@ -7,6 +7,15 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:team3db;DB_CLOSE_DELAY=-1}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: false
 
 gemini:
   api-key: ${GEMINI_API_KEY:}
