@@ -2,7 +2,6 @@ package com.depromeet.team3.wishlist.service
 
 import com.depromeet.team3.product.domain.Product
 import com.depromeet.team3.product.domain.ProductLink
-import com.depromeet.team3.product.repository.ProductJpaRepository
 import com.depromeet.team3.product.service.ProductExtractor
 import com.depromeet.team3.support.IntegrationTestSupport
 import com.depromeet.team3.wishlist.repository.WishJpaRepository
@@ -27,15 +26,12 @@ class WishlistServiceIntegrationTest : IntegrationTestSupport() {
     }
 
     class StubProductExtractor : ProductExtractor {
-        var build: (ProductLink) -> Product = { Product(sourceUrl = it.toString(), name = "기본 상품") }
+        var build: (ProductLink) -> Product = { Product(link = it, name = "기본 상품") }
         override fun extract(link: ProductLink): Product = build(link)
     }
 
     @Autowired
     private lateinit var wishlistService: WishlistService
-
-    @Autowired
-    private lateinit var productJpaRepository: ProductJpaRepository
 
     @Autowired
     private lateinit var wishJpaRepository: WishJpaRepository
@@ -46,17 +42,16 @@ class WishlistServiceIntegrationTest : IntegrationTestSupport() {
     @BeforeEach
     fun cleanUp() {
         wishJpaRepository.deleteAll()
-        productJpaRepository.deleteAll()
-        stubExtractor.build = { Product(sourceUrl = it.toString(), name = "기본 상품") }
+        stubExtractor.build = { Product(link = it, name = "기본 상품") }
     }
 
     @Test
-    fun `정상 등록 - product 와 wish 가 모두 저장된다`() {
+    fun `정상 등록 - wish 가 추출 결과를 박제한 채 저장된다`() {
         val url = "https://shop.example.com/products/42"
         val guestId = UUID.randomUUID()
         stubExtractor.build = { link ->
             Product(
-                sourceUrl = link.toString(),
+                link = link,
                 name = "나이키 에어포스",
                 regularPrice = 139_000,
                 discountedPrice = 99_000,
@@ -67,15 +62,15 @@ class WishlistServiceIntegrationTest : IntegrationTestSupport() {
 
         val result = wishlistService.register(rawUrl = url, guestId = guestId)
 
-        assertNotNull(result.wish.id)
+        assertNotNull(result.wish.getId())
         assertEquals(guestId, result.wish.guestId)
-        assertEquals(99_000, result.wish.snapshotDiscountedPrice)
-        assertEquals(139_000, result.wish.snapshotRegularPrice)
-        assertEquals("나이키 에어포스", result.product.name)
-
-        val product = productJpaRepository.findBySourceUrl(url)
-        assertNotNull(product)
-        assertEquals("나이키 에어포스", product.name)
+        assertEquals(ProductLink.parse(url), result.wish.product.link)
+        assertEquals("나이키 에어포스", result.wish.product.name)
+        assertEquals(139_000, result.wish.product.regularPrice)
+        assertEquals(99_000, result.wish.product.discountedPrice)
+        assertEquals("KRW", result.wish.product.currency)
+        assertEquals("https://cdn.example.com/p/42.jpg", result.wish.product.imageUrl)
+        assertEquals(28, result.wish.product.discountRate)
     }
 
     @Test
@@ -91,13 +86,12 @@ class WishlistServiceIntegrationTest : IntegrationTestSupport() {
     }
 
     @Test
-    fun `다른 guest 가 같은 URL 을 등록하면 product 는 재사용되고 wish 는 따로 생긴다`() {
+    fun `다른 guest 가 같은 URL 을 등록하면 wish 가 따로 생긴다`() {
         val url = "https://shop.example.com/products/42"
 
         wishlistService.register(rawUrl = url, guestId = UUID.randomUUID())
         wishlistService.register(rawUrl = url, guestId = UUID.randomUUID())
 
-        assertEquals(1, productJpaRepository.count())
         assertEquals(2, wishJpaRepository.count())
     }
 }

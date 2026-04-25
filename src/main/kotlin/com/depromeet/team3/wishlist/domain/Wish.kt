@@ -1,13 +1,14 @@
 package com.depromeet.team3.wishlist.domain
 
+import com.depromeet.team3.common.domain.BaseEntity
+import com.depromeet.team3.product.domain.Product
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.hibernate.annotations.CreationTimestamp
-import java.time.Instant
 import java.util.UUID
 
 @Entity
@@ -16,21 +17,14 @@ class Wish(
     @Column(name = "guest_id", nullable = false, columnDefinition = "BINARY(16)")
     var guestId: UUID,
 
-    @Column(name = "product_id", nullable = false)
-    var productId: Long,
+    @Embedded
+    var product: Product,
+) : BaseEntity<Long>() {
 
-    @Column(name = "snapshot_regular_price")
-    var snapshotRegularPrice: Int? = null,
-
-    @Column(name = "snapshot_discounted_price")
-    var snapshotDiscountedPrice: Int? = null,
-) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    var id: Long? = null
+    private var id: Long? = null
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    lateinit var createdAt: Instant
+    override fun getId(): Long = requireNotNull(id) { "Wish id is null before persist" }
 }

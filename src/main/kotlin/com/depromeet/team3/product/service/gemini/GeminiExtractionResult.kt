@@ -15,12 +15,12 @@ data class GeminiExtractionResult(
     fun toProduct(link: ProductLink): Product {
         if (!isProductPage) throw ProductExtractionException.notProductPage()
         return Product(
-            sourceUrl = link.toString(),
+            link = link,
             name = name?.takeIf { it.isNotBlank() },
+            imageUrl = imageUrl?.takeIf { it.isNotBlank() },
             regularPrice = regularPrice,
             discountedPrice = discountedPrice,
             currency = currency,
-            imageUrl = imageUrl?.takeIf { it.isNotBlank() },
         )
     }
 }

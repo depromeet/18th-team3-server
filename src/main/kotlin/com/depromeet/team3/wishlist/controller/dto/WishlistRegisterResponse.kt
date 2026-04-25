@@ -1,6 +1,5 @@
 package com.depromeet.team3.wishlist.controller.dto
 
-import com.depromeet.team3.product.domain.Product
 import com.depromeet.team3.wishlist.domain.Wish
 
 data class WishlistRegisterResponse(
@@ -13,14 +12,14 @@ data class WishlistRegisterResponse(
     val imageUrl: String?,
 ) {
     companion object {
-        fun from(wish: Wish, product: Product): WishlistRegisterResponse = WishlistRegisterResponse(
-            wishId = requireNotNull(wish.id),
-            name = product.name,
-            regularPrice = product.regularPrice,
-            discountedPrice = product.discountedPrice,
-            discountRate = product.discountRate,
-            currency = product.currency,
-            imageUrl = product.imageUrl,
+        fun from(wish: Wish): WishlistRegisterResponse = WishlistRegisterResponse(
+            wishId = wish.getId(),
+            name = wish.product.name,
+            regularPrice = wish.product.regularPrice,
+            discountedPrice = wish.product.discountedPrice,
+            discountRate = wish.product.discountRate,
+            currency = wish.product.currency,
+            imageUrl = wish.product.imageUrl,
         )
     }
 }

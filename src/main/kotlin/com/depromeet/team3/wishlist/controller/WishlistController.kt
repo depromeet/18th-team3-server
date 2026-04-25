@@ -19,6 +19,6 @@ class WishlistController(
     @ResponseStatus(HttpStatus.CREATED)
     fun register(@RequestBody request: WishlistRegisterRequest): WishlistRegisterResponse {
         val result = wishlistService.register(rawUrl = request.url, guestId = request.guestId)
-        return WishlistRegisterResponse.from(result.wish, result.product)
+        return WishlistRegisterResponse.from(result.wish)
     }
 }

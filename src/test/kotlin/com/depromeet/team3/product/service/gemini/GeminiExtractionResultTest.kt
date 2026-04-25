@@ -70,7 +70,7 @@ class GeminiExtractionResultTest {
         assertEquals(28, product.discountRate)
         assertEquals("KRW", product.currency)
         assertEquals("https://cdn.example.com/p/42.jpg", product.imageUrl)
-        assertEquals(link.toString(), product.sourceUrl)
+        assertEquals(link, product.link)
     }
 
     @Test

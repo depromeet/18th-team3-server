@@ -2,9 +2,16 @@ package com.depromeet.team3.product.domain
 
 import java.net.URI
 
-@JvmInline
-value class ProductLink private constructor(val value: URI) {
+class ProductLink private constructor(val value: URI) {
     override fun toString(): String = value.toString()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ProductLink) return false
+        return value == other.value
+    }
+
+    override fun hashCode(): Int = value.hashCode()
 
     companion object {
         private val HTTP_SCHEMES = setOf("https")
