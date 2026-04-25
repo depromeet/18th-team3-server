@@ -12,5 +12,5 @@ class GuestController(
     private val guestService: GuestService,
 ) {
     @PostMapping
-    fun issueGuestUuid(): GuestResponse = GuestResponse(guestService.issueGuestUuid())
+    fun issueGuestUuid(): GuestResponse = GuestResponse(guestService.issueGuestId())
 }
