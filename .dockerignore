@@ -1,6 +1,7 @@
 .git
 .gradle
-build
+build/
+!build/libs/*.jar
 .idea
 out
 .kotlin
