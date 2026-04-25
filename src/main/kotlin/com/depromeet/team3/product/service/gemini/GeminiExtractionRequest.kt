@@ -1,4 +1,4 @@
-package com.depromeet.team3.link.service.gemini
+package com.depromeet.team3.product.service.gemini
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import java.net.URI
@@ -9,13 +9,9 @@ import java.net.URI
 data class GeminiExtractionRequest(
     val generationConfig: GenerationConfig,
     val contents: List<Content>,
-    val tools: List<Tool>,
 ) {
     data class GenerationConfig(
         val responseMimeType: String,
-        // Gemini 3 에서 tools 와 구조화 출력을 함께 쓰려면 구식 responseSchema 가 아닌 responseJsonSchema 를 사용.
-        // 내부 스키마 형식은 OpenAPI-ish (소문자 type + nullable:true) 를 Gemini 가 받아준다.
-        // JSON Schema 표준의 type 배열 표기(["string","null"]) 는 현 시점에 거부되므로 쓰지 않는다.
         val responseJsonSchema: JsonSchema,
     )
 
@@ -37,21 +33,25 @@ data class GeminiExtractionRequest(
         val nullable: Boolean? = null,
     )
 
-    // url_context tool 활성화 시 Gemini 가 직접 URL 을 fetch 해 콘텐츠를 in-context 로 참조한다.
-    // 옵션 필드가 비어 있어 Gemini 가 기본 동작으로 fetch 하도록 빈 객체 `{}` 로 직렬화한다.
-    data class Tool(
-        val urlContext: UrlContextOptions = UrlContextOptions,
-    )
-
-    data object UrlContextOptions
-
     companion object {
+        // 서버에서 직접 fetch 한 HTML 을 in-context 로 받기 때문에 Gemini 의 url_context tool 을 쓰지 않는다.
+        // CSR 페이지의 inline JSON-LD 등 정적 HTML 안의 정보를 LLM 이 직접 보고 추출하도록 유도.
         private val SYSTEM_PROMPT = """
-            You are a product information extractor. Given the URL of a product page,
-            fetch the page (via the url_context tool) and extract information for the MAIN product.
+            You are a product information extractor. Given the URL and the HTML of a product page,
+            extract information for the MAIN product of the page.
+
+            **Input**:
+            - URL: the product page URL
+            - HTML: raw HTML content of that page (may include <script type="application/ld+json"> JSON-LD,
+              <meta property="og:..."> Open Graph tags, inline JSON state, and visible body text)
+
+            **Strategy**:
+            1. Prefer JSON-LD product schema (Schema.org Product) — fields like offers.price, priceSpecification.price,
+               priceCurrency, name, image. This is the most reliable source.
+            2. Then Open Graph meta tags (og:title, og:image, og:description) and visible price text.
+            3. If no reliable price source exists, return null for unknown fields. DO NOT GUESS.
 
             Ignore related products, recommended items, advertisements, and sidebar content.
-            Focus on the primary product that the page is about.
 
             **Fields**:
             1. isProductPage (boolean, required): true if the page describes a single identifiable product for sale.
@@ -67,6 +67,8 @@ data class GeminiExtractionRequest(
             **Price rules**:
             - Single price, no discount indicator → regularPrice only, discountedPrice null.
             - Both original and sale prices visible → regularPrice = original, discountedPrice = sale.
+            - JSON-LD priceSpecification with priceType="StrikethroughPrice" → that price is regularPrice,
+              the outer offers.price is discountedPrice.
             - Do NOT extract discount rate. The server computes it from regularPrice and discountedPrice.
 
             Respond with JSON only, matching the provided schema. Handle any language.
@@ -85,9 +87,7 @@ data class GeminiExtractionRequest(
             required = listOf("isProductPage"),
         )
 
-        private val URL_CONTEXT_TOOL = Tool()
-
-        fun forUrlExtraction(url: URI): GeminiExtractionRequest =
+        fun forHtmlExtraction(url: URI, html: String): GeminiExtractionRequest =
             GeminiExtractionRequest(
                 generationConfig = GenerationConfig(
                     responseMimeType = "application/json",
@@ -97,11 +97,10 @@ data class GeminiExtractionRequest(
                     Content(
                         parts = listOf(
                             Part(text = SYSTEM_PROMPT),
-                            Part(text = "URL: $url"),
+                            Part(text = "URL: $url\n\nHTML:\n$html"),
                         ),
                     ),
                 ),
-                tools = listOf(URL_CONTEXT_TOOL),
             )
     }
 }

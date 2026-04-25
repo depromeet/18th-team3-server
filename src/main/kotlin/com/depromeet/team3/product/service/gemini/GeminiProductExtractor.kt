@@ -1,8 +1,9 @@
-package com.depromeet.team3.link.service.gemini
+package com.depromeet.team3.product.service.gemini
 
-import com.depromeet.team3.common.domain.Product
-import com.depromeet.team3.link.domain.ProductLink
-import com.depromeet.team3.link.service.ProductExtractor
+import com.depromeet.team3.product.domain.Product
+import com.depromeet.team3.product.domain.ProductLink
+import com.depromeet.team3.product.service.PageFetcher
+import com.depromeet.team3.product.service.ProductExtractor
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.client.SimpleClientHttpRequestFactory
@@ -18,6 +19,7 @@ import tools.jackson.module.kotlin.readValue
 class GeminiProductExtractor(
     private val objectMapper: ObjectMapper,
     private val geminiProperties: GeminiProperties,
+    private val pageFetcher: PageFetcher,
 ) : ProductExtractor {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -33,8 +35,14 @@ class GeminiProductExtractor(
         .build()
 
     override fun extract(link: ProductLink): Product {
-        val request = GeminiExtractionRequest.forUrlExtraction(link.value)
+        val fetchStart = System.nanoTime()
+        val page = pageFetcher.fetch(link)
+        val fetchMs = (System.nanoTime() - fetchStart) / 1_000_000
 
+        val html = sanitize(page.html)
+        val request = GeminiExtractionRequest.forHtmlExtraction(link.value, html)
+
+        val llmStart = System.nanoTime()
         // TODO: Gemini API 의 간헐적 5xx/타임아웃 대응 재시도 로직 필요. RETRYABLE 카테고리 예외 대상.
         val response = try {
             restClient
@@ -57,15 +65,15 @@ class GeminiProductExtractor(
         } catch (e: ResourceAccessException) {
             throw GeminiApiException.upstreamError(e)
         } ?: throw GeminiApiException.emptyResponse()
+        val llmMs = (System.nanoTime() - llmStart) / 1_000_000
 
-        // url_context fetch 결과는 블랙박스라 추적성을 위해 남긴다. 차단/캐시/실패 패턴 수집용.
-        response.urlContextMetadata()?.urlMetadata?.forEach { meta ->
-            log.info(
-                "url_context fetch: status={} url={}",
-                meta.urlRetrievalStatus,
-                meta.retrievedUrl,
-            )
-        }
+        log.info(
+            "extract latency: fetch={}ms llm={}ms html={}chars url={}",
+            fetchMs,
+            llmMs,
+            html.length,
+            link,
+        )
 
         val text = response.extractText()
         val result = try {
@@ -73,17 +81,38 @@ class GeminiProductExtractor(
         } catch (e: Exception) {
             throw GeminiApiException.parseError(e)
         }
-        return result.toProduct()
+        return result.toProduct(link)
     }
+
+    // LLM 입력에서 <script>/<style>/주석을 제거해 토큰 낭비와 오판(스크립트 안의 가짜 가격 JSON 등)을 줄인다.
+    // 단 <script type="application/ld+json"> 은 product schema 가 들어있을 가능성이 높아 보존한다.
+    private fun sanitize(html: String): String = html
+        .replace(NON_LDJSON_SCRIPT_PATTERN, "")
+        .replace(STYLE_PATTERN, "")
+        .replace(COMMENT_PATTERN, "")
 
     companion object {
         private const val CONNECT_TIMEOUT_MS = 5_000
 
-        // url_context fetch + 모델 추론이 합쳐지므로 넉넉하게.
+        // LLM 응답은 수십 초까지 갈 수 있어 넉넉하게 설정.
         private const val READ_TIMEOUT_MS = 60_000
 
         // API 키는 access log 에 남지 않도록 쿼리 대신 헤더로 전달.
         // https://ai.google.dev/gemini-api/docs/api-key#provide-api-key-explicitly
         private const val GEMINI_API_KEY_HEADER = "x-goog-api-key"
+
+        // application/ld+json 만 살리고 나머지 <script> 블록은 제거. (?!...) 는 negative lookahead.
+        private val NON_LDJSON_SCRIPT_PATTERN = Regex(
+            "<script\\b(?![^>]*type=[\"']application/ld\\+json[\"'])[^>]*>.*?</script>",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
+        )
+        private val STYLE_PATTERN = Regex(
+            "<style\\b[^>]*>.*?</style>",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
+        )
+        private val COMMENT_PATTERN = Regex(
+            "<!--.*?-->",
+            setOf(RegexOption.DOT_MATCHES_ALL),
+        )
     }
 }

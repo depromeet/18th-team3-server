@@ -1,4 +1,4 @@
-package com.depromeet.team3.link.service.gemini
+package com.depromeet.team3.product.service.gemini
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
@@ -8,9 +8,7 @@ data class GeminiProperties(
     val model: String = "gemini-3-flash-preview",
 ) {
     init {
-        require(apiKey.isNotBlank()) {
-            "GEMINI_API_KEY 가 설정되지 않았습니다. .env 또는 환경변수에 값을 지정하세요."
-        }
+        require(apiKey.isNotBlank()) { "GEMINI_API_KEY 가 비어 있습니다." }
         require(model.isNotBlank()) { "gemini.model 이 비어 있습니다." }
     }
 
