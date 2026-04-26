@@ -27,3 +27,8 @@ spring:
 gemini:
   api-key: ${GEMINI_API_KEY}
   model: gemini-3-flash-preview
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  default-produces-media-type: application/json
