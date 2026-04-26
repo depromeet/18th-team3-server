@@ -1,13 +1,7 @@
-name: "📌 Task"
-description: "구체적인 작업 단위"
-labels: ["task"]
+name: "🏔️ Epic"
+description: "큰 기능 단위 또는 이니셔티브"
+labels: ["epic"]
 body:
-  - type: textarea
-    id: parent_epic
-    attributes:
-      label: 상위 Epic
-      placeholder: "#을 입력하면 이슈를 검색할 수 있습니다"
-
   - type: textarea
     id: why
     attributes:
@@ -20,7 +14,7 @@ body:
     id: what
     attributes:
       label: 무엇을
-      description: 목표 상태, 예상 작업
+      description: 목표 상태, 예상 범위
     validations:
       required: true
 

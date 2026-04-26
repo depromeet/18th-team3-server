@@ -3,6 +3,12 @@ description: "버그 제보"
 labels: ["bug"]
 body:
   - type: textarea
+    id: parent_epic
+    attributes:
+      label: 상위 Epic
+      placeholder: "#을 입력하면 이슈를 검색할 수 있습니다 (없으면 비워두세요)"
+
+  - type: textarea
     id: why
     attributes:
       label: 왜
@@ -17,3 +23,20 @@ body:
       description: 기대 동작, 예상 범위
     validations:
       required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 우선순위
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: input
+    id: due_date
+    attributes:
+      label: 마감일
+      placeholder: "MMDD (없으면 비워두세요)"

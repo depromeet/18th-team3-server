@@ -14,7 +14,7 @@ data class GeminiOcrResponse(
 ) {
     fun extractText(): String =
         candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
-            ?: throw GeminiApiException("Gemini 응답에 텍스트 파트가 없습니다.")
+            ?: throw GeminiApiException.noTextPart()
 
     data class Candidate(
         val content: Content,
