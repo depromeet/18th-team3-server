@@ -4,8 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>team3 API Docs</title>
-    <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css" />
+    <!--
+      v9.x: React Router v6 업그레이드로 hash 라우팅 회귀 버그 발생 (URL 해시는 변경되나 콘텐츠 미갱신)
+      v8.5.2 고정: hash router 정상 동작이 확인된 마지막 v8 버전
+    -->
+    <script
+      src="https://unpkg.com/@stoplight/elements@8.5.2/web-components.min.js"
+      integrity="sha384-Wy+FsmLS9ZgiQK/ODulQPSA9zg+xHduMLnVEy+vZeGqwi1FKQ8/dKmsE38c0ovx/"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@stoplight/elements@8.5.2/styles.min.css"
+      integrity="sha384-oYu9Au1JU1Sd5Za5LYSepn+Sofm8uvVdUCxLWbJYesNAS72Y7G/gQ0pjiB6wyf1Z"
+      crossorigin="anonymous"
+    />
   </head>
   <body style="margin: 0;">
     <elements-api
