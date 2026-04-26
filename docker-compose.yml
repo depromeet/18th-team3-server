@@ -1,0 +1,25 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: team3-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-team3}
+      MYSQL_USER: ${DB_USERNAME:-team3}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-team3}
+    ports:
+      - "3306:3306"
+    volumes:
+      - team3-mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  team3-mysql-data:
