@@ -1,10 +1,9 @@
 package com.depromeet.team3
 
+import com.depromeet.team3.support.IntegrationTestSupport
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.context.SpringBootTest
 
-@SpringBootTest
-class Team3ApplicationTests {
+class Team3ApplicationTests : IntegrationTestSupport() {
 
     @Test
     fun contextLoads() {
