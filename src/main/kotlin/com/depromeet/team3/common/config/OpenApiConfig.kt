@@ -19,6 +19,8 @@ class OpenApiConfig {
         .info(
             Info()
                 .title("$applicationName API")
+                // API 버전은 빌드 버전(0.0.1-SNAPSHOT)과 별개의 public 계약 버전이므로 별도 관리
+                // project.version은 Gradle 컨텍스트 전용이라 Spring Bean에서 직접 참조 불가
                 .version("v1")
                 .description(
                     """
