@@ -91,9 +91,10 @@ jobs:
           update_field "$DUE_FIELD"          "date"                   "$DUE_DATE"            "Date"
           update_field "$PRIORITY_FIELD_ID"  "singleSelectOptionId"   "$PRIORITY_OPTION_ID"  "String"
 
-          [[ -n "$START_DATE" ]]        && echo "Start date set: $START_DATE"
-          [[ -n "$DUE_DATE" ]]          && echo "Due date set: $DUE_DATE"
-          [[ -n "$PRIORITY_OPTION_ID" ]] && echo "Priority set: $PRIORITY_LABEL"
+          # bash -e 환경에서 [[ ]] && echo 패턴은 조건이 false일 때 exit 1을 유발하므로 if/fi 사용
+          if [[ -n "$START_DATE" ]];        then echo "Start date set: $START_DATE"; fi
+          if [[ -n "$DUE_DATE" ]];          then echo "Due date set: $DUE_DATE"; fi
+          if [[ -n "$PRIORITY_OPTION_ID" ]]; then echo "Priority set: $PRIORITY_LABEL"; fi
 
   check-parent-epic:
     runs-on: ubuntu-latest
@@ -121,14 +122,16 @@ jobs:
   check-assignee:
     runs-on: ubuntu-latest
     steps:
-      - name: Warn if No Assignee
+      - name: Auto-assign creator if no assignee
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ASSIGNEES: ${{ toJson(github.event.issue.assignees) }}
+          CREATOR: ${{ github.event.issue.user.login }}
         run: |
           if echo "$ASSIGNEES" | jq -e 'length == 0' > /dev/null; then
-            gh issue comment "$ISSUE_NUMBER" \
-              --body "👤 담당자가 지정되지 않았습니다. Assignee를 설정해주세요." \
+            gh issue edit "$ISSUE_NUMBER" \
+              --add-assignee "$CREATOR" \
               --repo depromeet/18th-team3-server
+            echo "Auto-assigned to creator: $CREATOR"
           fi
