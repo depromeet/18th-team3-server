@@ -38,5 +38,13 @@ class PageFetchException private constructor(
                 ErrorCategory.RETRYABLE,
                 HttpStatus.BAD_GATEWAY,
             )
+
+        // host 가 사설/메타데이터/loopback 영역으로 resolve 될 때 SSRF 차단 신호.
+        fun blockedHost(link: ProductLink): PageFetchException =
+            PageFetchException(
+                "허용되지 않는 호스트입니다: $link",
+                ErrorCategory.INVALID_INPUT,
+                HttpStatus.BAD_REQUEST,
+            )
     }
 }

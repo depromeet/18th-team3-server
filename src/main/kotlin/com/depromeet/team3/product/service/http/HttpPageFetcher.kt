@@ -9,23 +9,34 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientResponseException
+import java.net.HttpURLConnection
+import java.net.InetAddress
 
 @Component
 class HttpPageFetcher : PageFetcher {
+    // 외부 페이지 fetch 라 redirect 를 따라가지 않는다. 따라가면 1차 host 검증을
+    // 통과해도 사설 IP 로 Location 점프하는 SSRF 우회가 가능하다.
+    private val requestFactory = object : SimpleClientHttpRequestFactory() {
+        override fun prepareConnection(connection: HttpURLConnection, httpMethod: String) {
+            super.prepareConnection(connection, httpMethod)
+            connection.instanceFollowRedirects = false
+        }
+    }.apply {
+        setConnectTimeout(CONNECT_TIMEOUT_MS)
+        setReadTimeout(READ_TIMEOUT_MS)
+    }
+
     private val restClient = RestClient
         .builder()
-        .requestFactory(
-            SimpleClientHttpRequestFactory().apply {
-                setConnectTimeout(CONNECT_TIMEOUT_MS)
-                setReadTimeout(READ_TIMEOUT_MS)
-            },
-        )
+        .requestFactory(requestFactory)
         .defaultHeader(HttpHeaders.USER_AGENT, USER_AGENT)
         .defaultHeader(HttpHeaders.ACCEPT, "text/html,application/xhtml+xml,*/*;q=0.8")
         .defaultHeader(HttpHeaders.ACCEPT_LANGUAGE, "ko,en;q=0.9")
         .build()
 
     override fun fetch(link: ProductLink): PageContent {
+        guardAgainstInternalHost(link)
+
         // String 오버로드는 URI 템플릿으로 해석되어 {q} 같은 쿼리가 변수로 치환될 수 있으므로 URI 로 명시 전달.
         val body = try {
             restClient
@@ -44,6 +55,27 @@ class HttpPageFetcher : PageFetcher {
 
         val truncated = if (body.length > MAX_HTML_CHARS) body.substring(0, MAX_HTML_CHARS) else body
         return PageContent(link = link, html = truncated)
+    }
+
+    // host 가 loopback / 사설 / 링크로컬 / 메타데이터 IP 로 resolve 되면 SSRF 위험으로 차단.
+    // 외부 쇼핑몰만 fetch 하는 것이 본 컴포넌트의 책임이라 외부 라우팅 가능 IP 만 허용한다.
+    private fun guardAgainstInternalHost(link: ProductLink) {
+        val host = link.value.host ?: throw PageFetchException.blockedHost(link)
+        val addresses = try {
+            InetAddress.getAllByName(host)
+        } catch (e: java.net.UnknownHostException) {
+            throw PageFetchException.upstreamError(link, e)
+        }
+        val anyInternal = addresses.any { addr ->
+            addr.isLoopbackAddress ||
+                addr.isAnyLocalAddress ||
+                addr.isSiteLocalAddress ||
+                addr.isLinkLocalAddress ||
+                addr.isMulticastAddress ||
+                // AWS / GCP 인스턴스 메타데이터. site-local 범위에 속하지 않아 별도 차단.
+                addr.hostAddress == "169.254.169.254"
+        }
+        if (anyInternal) throw PageFetchException.blockedHost(link)
     }
 
     companion object {
