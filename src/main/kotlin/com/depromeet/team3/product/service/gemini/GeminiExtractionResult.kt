@@ -17,10 +17,12 @@ data class GeminiExtractionResult(
         return Product(
             link = link,
             name = name?.takeIf { it.isNotBlank() },
-            imageUrl = imageUrl?.takeIf { it.isNotBlank() },
+            // LLM 이 javascript:/data: 같은 스킴을 흘리면 클라이언트가 <img src> 로 쓰는
+            // 순간 XSS 사다리가 되므로 https 만 통과시킨다.
+            imageUrl = imageUrl?.takeIf { it.isNotBlank() && it.startsWith("https://", ignoreCase = true) },
             regularPrice = regularPrice,
             discountedPrice = discountedPrice,
-            currency = currency,
+            currency = currency?.takeIf { it.isNotBlank() },
         )
     }
 }
