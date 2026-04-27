@@ -36,7 +36,7 @@ class WishlistService(
         val started = System.nanoTime()
         val product = productExtractor.extract(link)
         val elapsedMs = (System.nanoTime() - started) / 1_000_000
-        log.info("extract latency: total={}ms url={}", elapsedMs, link)
+        log.info("extract latency: total={}ms url={}", elapsedMs, link.safeLogString())
         return product
     }
 }
