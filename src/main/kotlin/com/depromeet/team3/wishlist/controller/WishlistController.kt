@@ -5,6 +5,7 @@ import com.depromeet.team3.wishlist.controller.dto.WishlistRegisterRequest
 import com.depromeet.team3.wishlist.controller.dto.WishlistRegisterResponse
 import com.depromeet.team3.wishlist.service.WishlistService
 import io.swagger.v3.oas.annotations.Operation
+import jakarta.validation.Valid
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.media.Schema
