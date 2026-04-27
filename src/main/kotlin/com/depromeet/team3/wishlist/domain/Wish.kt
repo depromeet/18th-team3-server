@@ -26,5 +26,8 @@ class Wish(
     @Column(name = "id")
     private var id: Long? = null
 
-    override fun getId(): Long = requireNotNull(id) { "Wish id is null before persist" }
+    // BaseEntity#equals/hashCode 가 getId() 를 호출한다. 영속화 전 인스턴스를
+    // HashSet/HashMap 에 담거나 Hibernate 가 동등성 검사를 할 때 throw 하면
+    // 의도치 않게 IllegalArgumentException 이 새어나가므로 0 으로 떨어뜨린다.
+    override fun getId(): Long = id ?: 0L
 }
