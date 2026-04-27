@@ -16,7 +16,9 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-root}"]
+      # mysqladmin ping 은 인증 없이도 reachable 여부를 돌려준다.
+      # 인자에 비밀번호를 박으면 컨테이너 내부 ps / docker inspect 출력에 그대로 노출된다.
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 3s
       retries: 10
