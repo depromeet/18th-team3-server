@@ -21,13 +21,10 @@ data class ApiResponse<T>(
             code = "COMMON_SUCCESS",
         )
 
-        fun <T> created(
-            data: T,
-            detail: String?,
-        ): ApiResponse<T> = ApiResponse(
+        fun <T> created(data: T? = null): ApiResponse<T> = ApiResponse(
             status = HttpStatus.CREATED.value(),
             data = data,
-            detail = detail ?: "생성되었습니다.",
+            detail = "정상적으로 생성되었습니다.",
             code = "CREATED",
         )
 
