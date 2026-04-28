@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -40,19 +39,24 @@ class WishlistController(
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON_VALUE,
-                        schema = Schema(implementation = WishlistRegisterResponse::class),
+                        schema = Schema(implementation = ApiResponse::class),
                         examples = [
                             ExampleObject(
                                 name = "등록 성공",
                                 value = """
                                     {
-                                      "wishId": 1024,
-                                      "name": "에어 조던 1 미드",
-                                      "regularPrice": 159000,
-                                      "discountedPrice": 119000,
-                                      "discountRate": 25,
-                                      "currency": "KRW",
-                                      "imageUrl": "https://cdn.example.com/p/1024.jpg"
+                                      "status": 201,
+                                      "data": {
+                                        "wishId": 1024,
+                                        "name": "에어 조던 1 미드",
+                                        "regularPrice": 159000,
+                                        "discountedPrice": 119000,
+                                        "discountRate": 25,
+                                        "currency": "KRW",
+                                        "imageUrl": "https://cdn.example.com/p/1024.jpg"
+                                      },
+                                      "detail": "위시가 등록되었습니다.",
+                                      "code": "WISH_CREATED"
                                     }
                                 """,
                             ),
@@ -65,18 +69,17 @@ class WishlistController(
                 description = "잘못된 요청 (URL 형식 오류 등)",
                 content = [
                     Content(
-                        mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                        schema = Schema(implementation = ProblemDetail::class),
+                        mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = Schema(implementation = ApiResponse::class),
                         examples = [
                             ExampleObject(
                                 name = "URL 형식 오류",
                                 value = """
                                     {
-                                      "type": "about:blank",
-                                      "title": "Bad Request",
                                       "status": 400,
+                                      "data": null,
                                       "detail": "지원하지 않는 URL 형식입니다.",
-                                      "category": "INVALID_INPUT"
+                                      "code": "INVALID_INPUT"
                                     }
                                 """,
                             ),
@@ -89,18 +92,17 @@ class WishlistController(
                 description = "이미 위시리스트에 등록된 상품",
                 content = [
                     Content(
-                        mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                        schema = Schema(implementation = ProblemDetail::class),
+                        mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = Schema(implementation = ApiResponse::class),
                         examples = [
                             ExampleObject(
                                 name = "중복 등록",
                                 value = """
                                     {
-                                      "type": "about:blank",
-                                      "title": "Conflict",
                                       "status": 409,
-                                      "detail": "입력 오류 — 요청을 수정하여 재시도",
-                                      "category": "INVALID_INPUT"
+                                      "data": null,
+                                      "detail": "이미 위시리스트에 등록된 상품입니다.",
+                                      "code": "WISH_DUPLICATED"
                                     }
                                 """,
                             ),
@@ -112,8 +114,11 @@ class WishlistController(
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun register(@RequestBody request: WishlistRegisterRequest): WishlistRegisterResponse {
+    fun register(@RequestBody request: WishlistRegisterRequest): com.depromeet.team3.common.response.ApiResponse<WishlistRegisterResponse> {
         val result = wishlistService.register(rawUrl = request.url, guestId = request.guestId)
-        return WishlistRegisterResponse.from(result.wish)
+        return com.depromeet.team3.common.response.ApiResponse.created(
+            data = WishlistRegisterResponse.from(result.wish),
+            detail = "위시가 등록되었습니다.",
+        )
     }
 }
