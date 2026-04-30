@@ -94,9 +94,12 @@ class TournamentControllerTest {
                 ),
             ),
         )
-        given(tournamentService.getTournamentById(1L)).willReturn(tournamentInfo)
+        given(tournamentService.getTournamentById(1L, userId)).willReturn(tournamentInfo)
 
-        mockMvc.perform(get("/api/v1/tournaments/1"))
+        mockMvc.perform(
+            get("/api/v1/tournaments/1")
+                .header("X-User-Id", userId.toString()),
+        )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.tournamentId").value(1))
             .andExpect(jsonPath("$.data.finalWinnerWishItemId").value(10))

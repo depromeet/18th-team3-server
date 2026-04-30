@@ -27,9 +27,10 @@ class TournamentService(
     }
 
     @Transactional(readOnly = true)
-    fun getTournamentById(tournamentId: Long): TournamentInfo {
+    fun getTournamentById(tournamentId: Long, userId: UUID): TournamentInfo {
         val tournament = tournamentRepository.findTournamentById(tournamentId)
             ?: throw TournamentException.notFoundTournament()
+        if (tournament.userId != userId) throw TournamentException.forbiddenTournament()
         val histories = tournamentRepository.findTournamentHistoriesByTournamentId(tournamentId)
         return TournamentInfo.of(tournament, histories)
     }

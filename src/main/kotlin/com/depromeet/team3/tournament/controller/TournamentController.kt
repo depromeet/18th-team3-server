@@ -41,8 +41,11 @@ class TournamentController(
     }
 
     @GetMapping("/{tournamentId}")
-    fun getTournamentById(@PathVariable tournamentId: Long): ApiResponse<TournamentInfoResponse> {
-        val tournamentInfo = tournamentService.getTournamentById(tournamentId)
+    fun getTournamentById(
+        @RequestHeader("X-User-Id") userId: UUID,
+        @PathVariable tournamentId: Long,
+    ): ApiResponse<TournamentInfoResponse> {
+        val tournamentInfo = tournamentService.getTournamentById(tournamentId, userId)
         return ApiResponse.ok(TournamentInfoResponse.from(tournamentInfo))
     }
 }

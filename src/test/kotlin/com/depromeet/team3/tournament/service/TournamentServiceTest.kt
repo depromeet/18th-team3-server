@@ -169,7 +169,7 @@ class TournamentServiceTest {
             ),
         )
 
-        val info = service.getTournamentById(tournamentId)
+        val info = service.getTournamentById(tournamentId, userId)
 
         assertEquals(tournamentId, info.tournamentId)
         assertNull(info.finalWinnerWishItemId)
@@ -181,7 +181,7 @@ class TournamentServiceTest {
     fun `getTournamentById 는 히스토리가 없어도 빈 리스트로 반환한다`() {
         val tournamentId = service.start(userId, StartTournament("빈 토너먼트", round = 4, wishItemIds = (1L..4L).toList()))
 
-        val info = service.getTournamentById(tournamentId)
+        val info = service.getTournamentById(tournamentId, userId)
 
         assertEquals(tournamentId, info.tournamentId)
         assertEquals(0, info.history.size)
@@ -190,7 +190,16 @@ class TournamentServiceTest {
     @Test
     fun `getTournamentById 에서 존재하지 않는 tournamentId 면 예외가 발생한다`() {
         assertFailsWith<TournamentException> {
-            service.getTournamentById(999L)
+            service.getTournamentById(999L, userId)
+        }
+    }
+
+    @Test
+    fun `getTournamentById 에서 다른 사용자의 토너먼트면 예외가 발생한다`() {
+        val tournamentId = service.start(userId, StartTournament("내 토너먼트", round = 4, wishItemIds = (1L..4L).toList()))
+
+        assertFailsWith<TournamentException> {
+            service.getTournamentById(tournamentId, otherUserId)
         }
     }
 }
