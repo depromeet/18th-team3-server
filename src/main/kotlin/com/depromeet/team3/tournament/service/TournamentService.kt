@@ -5,6 +5,7 @@ import com.depromeet.team3.tournament.domain.TournamentHistory
 import com.depromeet.team3.tournament.repository.TournamentRepository
 import com.depromeet.team3.tournament.service.dto.RecordMatch
 import com.depromeet.team3.tournament.service.dto.StartTournament
+import com.depromeet.team3.tournament.service.dto.TournamentInfo
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -23,6 +24,14 @@ class TournamentService(
                 wishItemIds = command.wishItemIds,
             ),
         )
+    }
+
+    @Transactional(readOnly = true)
+    fun getTournamentById(tournamentId: Long): TournamentInfo {
+        val tournament = tournamentRepository.findTournamentById(tournamentId)
+            ?: throw TournamentException.notFoundTournament()
+        val histories = tournamentRepository.findTournamentHistoriesByTournamentId(tournamentId)
+        return TournamentInfo.of(tournament, histories)
     }
 
     @Transactional
