@@ -4,5 +4,5 @@ import com.depromeet.team3.tournament.domain.TournamentHistory
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface TournamentHistoryJpaRepository : JpaRepository<TournamentHistory, Long> {
-    fun findAllByTournamentIdOrderByCurrentRoundAsc(tournamentId: Long): List<TournamentHistory>
+    fun findAllByTournamentIdOrderByCurrentRoundAscIdAsc(tournamentId: Long): List<TournamentHistory>
 }

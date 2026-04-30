@@ -20,6 +20,7 @@ class TournamentRepositoryImpl(
     override fun findTournamentById(tournamentId: Long): Tournament? =
         tournamentJpaRepository.findByIdOrNull(tournamentId)
 
+    // 인덱스 추가 필요: tournament_id, current_round, id
     override fun findTournamentHistoriesByTournamentId(tournamentId: Long): List<TournamentHistory> =
-        tournamentHistoryJpaRepository.findAllByTournamentIdOrderByCurrentRoundAsc(tournamentId)
+        tournamentHistoryJpaRepository.findAllByTournamentIdOrderByCurrentRoundAscIdAsc(tournamentId)
 }
