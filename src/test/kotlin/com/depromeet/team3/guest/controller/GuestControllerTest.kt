@@ -38,7 +38,7 @@ class GuestControllerTest {
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.guestId").value(expectedUuid.toString()))
+            .andExpect(jsonPath("$.data.guestId").value(expectedUuid.toString()))
     }
 
     @Test
@@ -49,10 +49,10 @@ class GuestControllerTest {
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.guestId").value(first.toString()))
+            .andExpect(jsonPath("$.data.guestId").value(first.toString()))
 
         mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.guestId").value(second.toString()))
+            .andExpect(jsonPath("$.data.guestId").value(second.toString()))
     }
 }
