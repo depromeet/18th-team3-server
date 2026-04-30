@@ -1,10 +1,12 @@
 package com.depromeet.team3.tournament.controller
 
 import com.depromeet.team3.common.response.ApiResponse
+import com.depromeet.team3.tournament.controller.dto.RecordMatchRequest
 import com.depromeet.team3.tournament.controller.dto.StartTournamentRequest
 import com.depromeet.team3.tournament.controller.dto.StartTournamentResponse
 import com.depromeet.team3.tournament.service.TournamentService
 import jakarta.validation.Valid
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -24,5 +26,15 @@ class TournamentController(
     ): ApiResponse<StartTournamentResponse> {
         val tournamentId = tournamentService.start(userId, request.toStartTournament())
         return ApiResponse.created(StartTournamentResponse(tournamentId))
+    }
+
+    @PostMapping("/{tournamentId}/matches")
+    fun recordMatch(
+        @RequestHeader("X-User-Id") userId: UUID,
+        @PathVariable tournamentId: Long,
+        @RequestBody @Valid request: RecordMatchRequest,
+    ): ApiResponse<Unit> {
+        tournamentService.recordMatch(userId, request.toRecordMatch(tournamentId))
+        return ApiResponse.ok()
     }
 }
