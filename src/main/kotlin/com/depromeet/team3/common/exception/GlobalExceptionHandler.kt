@@ -3,7 +3,6 @@ package com.depromeet.team3.common.exception
 import com.depromeet.team3.common.response.ApiResponseBody
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
-import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -25,16 +24,17 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleValidation(e: MethodArgumentNotValidException): ProblemDetail {
+    fun handleValidation(e: MethodArgumentNotValidException): ResponseEntity<ApiResponseBody<Nothing>> {
         // 첫 번째 위반 필드만 사용자 메시지로 노출. 나머지는 로그로.
+        // 응답 스키마는 다른 4xx 와 동일하게 ApiResponseBody 로 통일한다.
         val first = e.bindingResult.fieldErrors.firstOrNull()
         val detail = first
             ?.let { "${it.field}: ${it.defaultMessage ?: "유효하지 않은 값입니다."}" }
             ?: "요청 본문 검증 실패"
         log.warn("[ValidationException] {}", e.bindingResult.fieldErrors)
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail).apply {
-            setProperty("category", ErrorCategory.INVALID_INPUT)
-        }
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponseBody.fail(ErrorCategory.INVALID_INPUT, HttpStatus.BAD_REQUEST, detail))
     }
 
     @ExceptionHandler(IllegalArgumentException::class)
