@@ -48,13 +48,18 @@ class HttpPageFetcher : PageFetcher {
                 .retrieve()
                 .body(String::class.java)
         } catch (e: RestClientResponseException) {
+            log.warn("link fetch failed: status={} url={}", e.statusCode, link.safeLogString())
             throw when {
-                e.statusCode.is5xxServerError -> PageFetchException.upstreamError(link, e)
-                else -> PageFetchException.clientError(link, e)
+                e.statusCode.is5xxServerError -> PageFetchException.upstreamError(e)
+                else -> PageFetchException.clientError(e)
             }
         } catch (e: ResourceAccessException) {
-            throw PageFetchException.upstreamError(link, e)
-        } ?: throw PageFetchException.emptyBody(link)
+            log.warn("link fetch upstream error url={}", link.safeLogString())
+            throw PageFetchException.upstreamError(e)
+        } ?: run {
+            log.warn("link fetch empty body url={}", link.safeLogString())
+            throw PageFetchException.emptyBody()
+        }
 
         val truncated = if (body.length > MAX_HTML_CHARS) body.substring(0, MAX_HTML_CHARS) else body
         return PageContent(link = link, html = truncated)
@@ -70,7 +75,8 @@ class HttpPageFetcher : PageFetcher {
         val addresses = try {
             InetAddress.getAllByName(host)
         } catch (e: java.net.UnknownHostException) {
-            throw PageFetchException.upstreamError(link, e)
+            log.warn("link fetch unknown host url={}", link.safeLogString())
+            throw PageFetchException.upstreamError(e)
         }
         val anyInternal = addresses.any { addr ->
             addr.isLoopbackAddress ||
