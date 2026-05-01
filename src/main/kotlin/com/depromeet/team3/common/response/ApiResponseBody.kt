@@ -4,7 +4,7 @@ import com.depromeet.team3.common.exception.ErrorCategory
 import com.fasterxml.jackson.annotation.JsonInclude
 import org.springframework.http.HttpStatus
 
-data class ApiResponse<T>(
+data class ApiResponseBody<T>(
     val status: Int,
     val data: T?,
     val detail: String,
@@ -14,28 +14,30 @@ data class ApiResponse<T>(
 ) {
     companion object {
 
-        fun <T> ok(data: T? = null): ApiResponse<T> = ApiResponse(
-            status = HttpStatus.OK.value(),
-            data = data,
-            detail = "요청이 정상적으로 처리되었습니다.",
-            code = "COMMON_SUCCESS",
-        )
+        fun <T> ok(data: T? = null): ApiResponseBody<T> =
+            success(HttpStatus.OK, data)
 
-        fun <T> created(data: T? = null): ApiResponse<T> = ApiResponse(
-            status = HttpStatus.CREATED.value(),
-            data = data,
-            detail = "정상적으로 생성되었습니다.",
-            code = "CREATED",
-        )
+        fun <T> created(data: T? = null): ApiResponseBody<T> =
+            success(HttpStatus.CREATED, data)
 
         fun <T> fail(
             category: ErrorCategory,
             status: HttpStatus,
             detail: String? = null,
-        ): ApiResponse<T> = ApiResponse(
+        ): ApiResponseBody<T> = ApiResponseBody(
             status = status.value(),
             data = null,
             detail = detail ?: category.description,
+            code = status.name,
+        )
+
+        private fun <T> success(
+            status: HttpStatus,
+            data: T?,
+        ): ApiResponseBody<T> = ApiResponseBody(
+            status = status.value(),
+            data = data,
+            detail = "정상적으로 처리되었습니다.",
             code = status.name,
         )
     }
