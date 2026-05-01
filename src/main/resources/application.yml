@@ -27,7 +27,8 @@ spring:
 
 gemini:
   api-key: ${GEMINI_API_KEY:}
-  model: gemini-3-flash-preview
+  # preview 모델은 2 주 사전공지 후 deprecate 정책이라 운영 안정성을 위해 GA 모델 사용.
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
 
 springdoc:
   api-docs:
