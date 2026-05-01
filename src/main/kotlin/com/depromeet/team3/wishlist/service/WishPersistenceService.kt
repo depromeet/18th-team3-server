@@ -4,6 +4,7 @@ import com.depromeet.team3.product.domain.Product
 import com.depromeet.team3.wishlist.domain.Wish
 import com.depromeet.team3.wishlist.repository.WishRepository
 import com.depromeet.team3.wishlist.service.dto.WishRegisterResult
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -16,8 +17,13 @@ class WishPersistenceService(
     private val wishRepository: WishRepository,
 ) {
     @Transactional
-    fun persist(guestId: UUID, product: Product): WishRegisterResult {
-        val wish = wishRepository.save(Wish(guestId = guestId, product = product))
-        return WishRegisterResult(wish = wish)
-    }
+    fun persist(guestId: UUID, product: Product): WishRegisterResult =
+        try {
+            val wish = wishRepository.save(Wish(guestId = guestId, product = product))
+            WishRegisterResult(wish = wish)
+        } catch (e: DataIntegrityViolationException) {
+            // 동시 요청이 register 단계의 dedup 체크를 모두 통과한 뒤
+            // uk_wishes_guest_source 제약에 걸린 race 케이스. 500 대신 409 로 응답한다.
+            throw WishAlreadyExistsException(guestId = guestId, link = product.link)
+        }
 }
