@@ -40,9 +40,11 @@ class PageFetchException private constructor(
             )
 
         // host 가 사설/메타데이터/loopback 영역으로 resolve 될 때 SSRF 차단 신호.
-        fun blockedHost(link: ProductLink): PageFetchException =
+        // 사용자 입력 URL 의 query/fragment 에 토큰·세션이 박혀 있을 수 있어 메시지에 link
+        // 자체를 노출하지 않는다. 호출 지점에서 link.safeLogString() 으로만 로그를 남긴다.
+        fun blockedHost(): PageFetchException =
             PageFetchException(
-                "허용되지 않는 호스트입니다: $link",
+                "허용되지 않는 호스트입니다.",
                 ErrorCategory.INVALID_INPUT,
                 HttpStatus.BAD_REQUEST,
             )

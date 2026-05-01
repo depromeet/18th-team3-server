@@ -3,6 +3,7 @@ package com.depromeet.team3.product.service.http
 import com.depromeet.team3.product.domain.ProductLink
 import com.depromeet.team3.product.service.PageContent
 import com.depromeet.team3.product.service.PageFetcher
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
@@ -14,6 +15,8 @@ import java.net.InetAddress
 
 @Component
 class HttpPageFetcher : PageFetcher {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     // 외부 페이지 fetch 라 redirect 를 따라가지 않는다. 따라가면 1차 host 검증을
     // 통과해도 사설 IP 로 Location 점프하는 SSRF 우회가 가능하다.
     private val requestFactory = object : SimpleClientHttpRequestFactory() {
@@ -60,7 +63,10 @@ class HttpPageFetcher : PageFetcher {
     // host 가 loopback / 사설 / 링크로컬 / 메타데이터 IP 로 resolve 되면 SSRF 위험으로 차단.
     // 외부 쇼핑몰만 fetch 하는 것이 본 컴포넌트의 책임이라 외부 라우팅 가능 IP 만 허용한다.
     private fun guardAgainstInternalHost(link: ProductLink) {
-        val host = link.value.host ?: throw PageFetchException.blockedHost(link)
+        val host = link.value.host ?: run {
+            log.warn("[SSRF] blocked: missing host url={}", link.safeLogString())
+            throw PageFetchException.blockedHost()
+        }
         val addresses = try {
             InetAddress.getAllByName(host)
         } catch (e: java.net.UnknownHostException) {
@@ -75,7 +81,10 @@ class HttpPageFetcher : PageFetcher {
                 // AWS / GCP 인스턴스 메타데이터. site-local 범위에 속하지 않아 별도 차단.
                 addr.hostAddress == "169.254.169.254"
         }
-        if (anyInternal) throw PageFetchException.blockedHost(link)
+        if (anyInternal) {
+            log.warn("[SSRF] blocked: internal address resolved url={}", link.safeLogString())
+            throw PageFetchException.blockedHost()
+        }
     }
 
     companion object {
