@@ -1,7 +1,6 @@
 package com.depromeet.team3.product.service.gemini
 
 import com.depromeet.team3.product.domain.ProductLink
-import com.depromeet.team3.product.service.ProductExtractionException
 import com.depromeet.team3.support.IntegrationTestSupport
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -9,7 +8,6 @@ import org.junit.jupiter.api.Timeout
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * 실제 Gemini API 를 호출하는 통합 테스트.
@@ -26,22 +24,14 @@ class GeminiProductExtractorTest : IntegrationTestSupport() {
     @Test
     @Timeout(value = 90, unit = TimeUnit.SECONDS)
     fun `Gemini end-to-end 호출이 살아 있고 응답을 구조화해 돌려준다`() {
-        // Gemini 가 외부 URL 을 상품 페이지로 판정하면 Product 가, 아니면 ProductExtractionException
-        // 만 받아 정상 신호로 간주한다. 둘 다 정적 fetch + structured output 경로가 살아 있다는 증거.
-        // 그 외 다른 예외는 호출 경로(스키마, 인증, 직렬화 등)가 깨졌다는 뜻이라 fail 시켜야 한다.
+        // 호출 경로(인증·스키마·직렬화·모델) 가 살아 있는지 확인하는 생존성 테스트.
+        // 어떤 종류의 실패도 회귀 신호로 간주해 fail 시킨다 — ProductExtractionException 분기를
+        // 정상으로 인정하면 키 만료·모델 변경·응답 파싱 깨짐도 사일런트로 통과한다.
+        // 비상품 판정 분기 자체의 동작은 stub 기반 단위 테스트로 별도 검증한다.
         val link = ProductLink.parse("https://www.apple.com/shop/buy-iphone")
 
-        val result = runCatching { extractor.extract(link) }
-        result.fold(
-            onSuccess = { product ->
-                assertNotNull(product, "extract 결과가 null 일 수 없음")
-            },
-            onFailure = { e ->
-                assertTrue(
-                    e is ProductExtractionException,
-                    "허용되는 실패는 ProductExtractionException 한정. 실제: ${e.javaClass.simpleName}: ${e.message}",
-                )
-            },
-        )
+        val product = extractor.extract(link)
+
+        assertNotNull(product.name, "Gemini 가 상품명을 추출했어야 한다")
     }
 }
