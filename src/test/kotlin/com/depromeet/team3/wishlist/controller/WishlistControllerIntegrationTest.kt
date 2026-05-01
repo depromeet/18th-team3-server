@@ -1,15 +1,10 @@
 package com.depromeet.team3.wishlist.controller
 
 import com.depromeet.team3.product.domain.Product
-import com.depromeet.team3.product.domain.ProductLink
-import com.depromeet.team3.product.service.ProductExtractor
 import com.depromeet.team3.support.IntegrationTestSupport
-import tools.jackson.databind.ObjectMapper
+import com.depromeet.team3.support.StubProductExtractor
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -17,22 +12,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.context.WebApplicationContext
+import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @Transactional
-@Import(WishlistControllerIntegrationTest.StubExtractorConfig::class)
 class WishlistControllerIntegrationTest : IntegrationTestSupport() {
-
-    @TestConfiguration
-    class StubExtractorConfig {
-        @Bean
-        fun productExtractor(): StubProductExtractor = StubProductExtractor()
-    }
-
-    class StubProductExtractor : ProductExtractor {
-        var build: (ProductLink) -> Product = { Product(link = it, name = "기본 상품") }
-        override fun extract(link: ProductLink): Product = build(link)
-    }
 
     @Autowired
     private lateinit var webApplicationContext: WebApplicationContext
