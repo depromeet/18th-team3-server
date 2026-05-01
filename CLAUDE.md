@@ -87,9 +87,14 @@
 
 ### 규칙
 - 외부 호출 경계는 **프로그래머블 stub**(`@TestConfiguration` + 빈 교체) 으로 격리한다. 인터페이스(`ProductExtractor`)에 stub 구현(`StubProductExtractor`)을 만들어 빈으로 등록하고, stub 의 응답을 람다로 받아 매 테스트가 시나리오별로 교체한다.
+- **stub 의 default 람다는 throw 로 둔다.** 명시 세팅을 빠뜨리면 호출 시점에 즉시 `IllegalStateException` 으로 깨져 "이전 테스트의 build 가 살아남는" 함정을 차단한다. stub 을 호출하지 않는 테스트는 영향 없다.
   ```kotlin
   class StubProductExtractor : ProductExtractor {
-      var build: (ProductLink) -> Product = { Product(link = it, name = "기본 상품") }
+      // default 가 의도된 시나리오인 양 동작 가능한 값을 두면 명시 세팅을 빠뜨려도 통과해버린다.
+      // 명시 세팅을 강제하기 위해 default 자체를 throw 로 둔다.
+      var build: (ProductLink) -> Product = {
+          error("stub.build 를 테스트 본문에서 명시 세팅해야 한다.")
+      }
       override fun extract(link: ProductLink): Product = build(link)
   }
 
