@@ -37,11 +37,16 @@ class WishlistRegisterConcurrencyIntegrationTest : IntegrationTestSupport() {
         val body = objectMapper.writeValueAsString(mapOf("url" to url, "guestId" to guestId))
         stubExtractor.build = { link -> Product(link = link, name = "race 상품") }
 
+        // 2 단계 래치로 동시 출발을 강제한다. 한 단계 래치만 쓰면 worker 가 await 에 도달하기
+        // 전에 main 이 countDown 할 수 있어 사실상 순차 실행으로도 (201, 409) 가 통과해 race
+        // 재현 신뢰도가 떨어진다.
         val executor = Executors.newFixedThreadPool(2)
-        val ready = CountDownLatch(1)
+        val workersReady = CountDownLatch(2)
+        val start = CountDownLatch(1)
         val futures = (0..1).map {
             executor.submit<Int> {
-                ready.await()
+                workersReady.countDown()
+                start.await()
                 mockMvc.perform(
                     post("/api/v1/wishlists")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -49,7 +54,8 @@ class WishlistRegisterConcurrencyIntegrationTest : IntegrationTestSupport() {
                 ).andReturn().response.status
             }
         }
-        ready.countDown()
+        workersReady.await()
+        start.countDown()
         val statuses = futures.map { it.get(10, TimeUnit.SECONDS) }.toSet()
         executor.shutdown()
 
