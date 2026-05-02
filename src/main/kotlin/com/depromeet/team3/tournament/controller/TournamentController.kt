@@ -1,6 +1,6 @@
 package com.depromeet.team3.tournament.controller
 
-import com.depromeet.team3.common.response.ApiResponseBodyBody
+import com.depromeet.team3.common.response.ApiResponseBody
 import com.depromeet.team3.tournament.controller.dto.RecordMatchRequest
 import com.depromeet.team3.tournament.controller.dto.StartTournamentRequest
 import com.depromeet.team3.tournament.controller.dto.StartTournamentResponse
@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.media.Schema
-import io.swagger.v3.oas.annotations.responses.ApiResponseBody as SwaggerApiResponseBody
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
@@ -32,7 +32,7 @@ class TournamentController(
         summary = "토너먼트 시작",
         description = "위시 아이템 목록으로 토너먼트를 생성하고 시작한다.",
     )
-    @SwaggerApiResponseBody(
+    @SwaggerApiResponse(
         responseCode = "201",
         description = "토너먼트 생성 성공",
         content = [
@@ -67,7 +67,7 @@ class TournamentController(
         summary = "매치 결과 기록",
         description = "토너먼트의 한 라운드 매치 결과(승자)를 기록한다.",
     )
-    @SwaggerApiResponseBody(
+    @SwaggerApiResponse(
         responseCode = "204",
         description = "매치 결과 기록 성공",
     )
@@ -85,7 +85,7 @@ class TournamentController(
         summary = "토너먼트 조회",
         description = "토너먼트 ID로 토너먼트 정보와 매치 기록을 조회한다.",
     )
-    @SwaggerApiResponseBody(
+    @SwaggerApiResponse(
         responseCode = "200",
         description = "토너먼트 조회 성공",
         content = [
