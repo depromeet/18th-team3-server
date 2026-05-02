@@ -20,6 +20,13 @@ data class ApiResponseBody<T>(
         fun <T> created(data: T? = null): ApiResponseBody<T> =
             success(HttpStatus.CREATED, data)
 
+        fun <T> noContent(): ApiResponse<T> = ApiResponse(
+            status = HttpStatus.NO_CONTENT.value(),
+            data = null,
+            detail = "요청이 정상적으로 처리되었습니다.",
+            code = "NO_CONTENT",
+        )
+
         fun <T> fail(
             category: ErrorCategory,
             status: HttpStatus,

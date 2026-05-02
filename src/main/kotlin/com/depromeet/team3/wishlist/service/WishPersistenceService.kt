@@ -33,7 +33,7 @@ class WishPersistenceService(
             val matched = constraint == UK_WISHES_GUEST_SOURCE ||
                 constraint.endsWith(".$UK_WISHES_GUEST_SOURCE")
             if (!matched) throw e
-            throw WishAlreadyExistsException(guestId = guestId, link = product.link)
+            throw WishException.alreadyExists(guestId = guestId, link = product.link)
         }
 
     companion object {
