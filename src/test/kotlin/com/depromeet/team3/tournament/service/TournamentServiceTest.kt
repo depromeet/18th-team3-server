@@ -10,6 +10,7 @@ import com.depromeet.team3.tournament.service.dto.RecordMatch
 import com.depromeet.team3.tournament.service.dto.StartTournament
 import com.depromeet.team3.wishlist.domain.Wish
 import com.depromeet.team3.wishlist.repository.WishRepository
+import com.depromeet.team3.wishlist.service.WishException
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -220,7 +221,7 @@ class TournamentServiceTest {
     fun `start 에서 위시 아이템이 요청자의 것이 아니면 예외가 발생한다`() {
         val serviceWithNoOwnership = TournamentService(repository, TestWishRepository(allOwned = false))
 
-        assertFailsWith<TournamentException> {
+        assertFailsWith<WishException> {
             serviceWithNoOwnership.start(userId, StartTournament("토너먼트", round = 4, wishItemIds = (1L..4L).toList()))
         }
     }
