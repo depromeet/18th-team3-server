@@ -37,7 +37,7 @@ class TournamentController(
         @RequestBody @Valid request: RecordMatchRequest,
     ): ApiResponse<Unit> {
         tournamentService.recordMatch(userId, request.toRecordMatch(tournamentId))
-        return ApiResponse.ok()
+        return ApiResponse.noContent()
     }
 
     @GetMapping("/{tournamentId}")
