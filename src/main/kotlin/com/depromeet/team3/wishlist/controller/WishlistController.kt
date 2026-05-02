@@ -1,6 +1,6 @@
 package com.depromeet.team3.wishlist.controller
 
-import com.depromeet.team3.common.response.ApiResponse
+import com.depromeet.team3.common.response.ApiResponseBody
 import com.depromeet.team3.wishlist.controller.dto.WishlistRegisterRequest
 import com.depromeet.team3.wishlist.controller.dto.WishlistRegisterResponse
 import com.depromeet.team3.wishlist.service.WishlistService
@@ -8,8 +8,10 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @Tag(name = "Wishlist", description = "위시리스트 등록/조회 API")
 @RestController
@@ -34,13 +35,13 @@ class WishlistController(
     )
     @ApiResponses(
         value = [
-            SwaggerApiResponse(
+            ApiResponse(
                 responseCode = "201",
                 description = "위시리스트 등록 성공",
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON_VALUE,
-                        schema = Schema(implementation = SwaggerApiResponse::class),
+                        schema = Schema(implementation = ApiResponseBody::class),
                         examples = [
                             ExampleObject(
                                 name = "등록 성공",
@@ -56,8 +57,8 @@ class WishlistController(
                                         "currency": "KRW",
                                         "imageUrl": "https://cdn.example.com/p/1024.jpg"
                                       },
-                                      "detail": "위시가 등록되었습니다.",
-                                      "code": "WISH_CREATED"
+                                      "detail": "정상적으로 처리되었습니다.",
+                                      "code": "CREATED"
                                     }
                                 """,
                             ),
@@ -65,13 +66,13 @@ class WishlistController(
                     ),
                 ],
             ),
-            SwaggerApiResponse(
+            ApiResponse(
                 responseCode = "400",
                 description = "잘못된 요청 (URL 형식 오류 등)",
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON_VALUE,
-                        schema = Schema(implementation = SwaggerApiResponse::class),
+                        schema = Schema(implementation = ApiResponseBody::class),
                         examples = [
                             ExampleObject(
                                 name = "URL 형식 오류",
@@ -80,7 +81,7 @@ class WishlistController(
                                       "status": 400,
                                       "data": null,
                                       "detail": "지원하지 않는 URL 형식입니다.",
-                                      "code": "INVALID_INPUT"
+                                      "code": "BAD_REQUEST"
                                     }
                                 """,
                             ),
@@ -88,13 +89,13 @@ class WishlistController(
                     ),
                 ],
             ),
-            SwaggerApiResponse(
+            ApiResponse(
                 responseCode = "409",
                 description = "이미 위시리스트에 등록된 상품",
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON_VALUE,
-                        schema = Schema(implementation = SwaggerApiResponse::class),
+                        schema = Schema(implementation = ApiResponseBody::class),
                         examples = [
                             ExampleObject(
                                 name = "중복 등록",
@@ -103,7 +104,7 @@ class WishlistController(
                                       "status": 409,
                                       "data": null,
                                       "detail": "이미 위시리스트에 등록된 상품입니다.",
-                                      "code": "WISH_DUPLICATED"
+                                      "code": "CONFLICT"
                                     }
                                 """,
                             ),
@@ -115,8 +116,8 @@ class WishlistController(
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun register(@RequestBody request: WishlistRegisterRequest): ApiResponse<WishlistRegisterResponse> {
+    fun register(@Valid @RequestBody request: WishlistRegisterRequest): ApiResponseBody<WishlistRegisterResponse> {
         val result = wishlistService.register(rawUrl = request.url, guestId = request.guestId)
-        return ApiResponse.created(WishlistRegisterResponse.from(result.wish))
+        return ApiResponseBody.created(WishlistRegisterResponse.from(result.wish))
     }
 }

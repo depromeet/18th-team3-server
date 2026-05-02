@@ -12,5 +12,5 @@ class WishAlreadyExistsException(
     link: ProductLink,
 ) : BaseException("이미 위시리스트에 등록된 상품입니다. guestId=$guestId link=$link"), HttpMappable {
     override val httpStatus: HttpStatus = HttpStatus.CONFLICT
-    override val category: ErrorCategory = ErrorCategory.INVALID_INPUT
+    override val category: ErrorCategory = ErrorCategory.CONFLICT
 }

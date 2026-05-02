@@ -26,5 +26,5 @@ class Wish(
     @Column(name = "id")
     private var id: Long? = null
 
-    override fun getId(): Long = requireNotNull(id) { "Wish id is null before persist" }
+    override fun getIdOrNull(): Long? = id
 }

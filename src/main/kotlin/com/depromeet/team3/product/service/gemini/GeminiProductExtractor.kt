@@ -72,7 +72,7 @@ class GeminiProductExtractor(
             fetchMs,
             llmMs,
             html.length,
-            link,
+            link.safeLogString(),
         )
 
         val text = response.extractText()

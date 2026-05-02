@@ -1,58 +1,54 @@
 package com.depromeet.team3.guest.controller
 
-import com.depromeet.team3.guest.service.GuestService
-import org.junit.jupiter.api.BeforeEach
+import com.depromeet.team3.support.IntegrationTestSupport
+import tools.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.BDDMockito.given
-import org.mockito.InjectMocks
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.test.web.servlet.MockMvc
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.context.WebApplicationContext
 import java.util.UUID
+import kotlin.test.assertNotEquals
 
-@ExtendWith(MockitoExtension::class)
-class GuestControllerTest {
+@Transactional
+class GuestControllerTest : IntegrationTestSupport() {
 
-    @Mock
-    private lateinit var guestService: GuestService
+    @Autowired
+    private lateinit var webApplicationContext: WebApplicationContext
 
-    @InjectMocks
-    private lateinit var guestController: GuestController
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
 
-    private lateinit var mockMvc: MockMvc
+    @Test
+    fun `POST api v1 guests 는 UUID 형식의 guestId 를 반환한다`() {
+        val mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
 
-    @BeforeEach
-    fun setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(guestController).build()
+        val response = mockMvc.perform(post("/api/v1/guests"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.guestId").exists())
+            .andReturn().response.contentAsString
+
+        val guestId = objectMapper.readTree(response).path("data").path("guestId").asString()
+        UUID.fromString(guestId)
     }
 
     @Test
-    fun `POST api v1 guests 는 발급된 UUID 를 guestId 필드로 반환한다`() {
-        val expectedUuid = UUID.fromString("11111111-2222-3333-4444-555555555555")
-        given(guestService.issueGuestId()).willReturn(expectedUuid)
+    fun `POST api v1 guests 는 매 요청마다 서로 다른 UUID 를 발급한다`() {
+        val mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
 
-        mockMvc.perform(post("/api/v1/guests"))
+        val first = mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.guestId").value(expectedUuid.toString()))
-    }
+            .andReturn().response.contentAsString
+            .let { objectMapper.readTree(it).path("data").path("guestId").asString() }
 
-    @Test
-    fun `POST api v1 guests 는 매 요청마다 GuestService 를 호출해 새 UUID 를 받아온다`() {
-        val first = UUID.randomUUID()
-        val second = UUID.randomUUID()
-        given(guestService.issueGuestId()).willReturn(first, second)
-
-        mockMvc.perform(post("/api/v1/guests"))
+        val second = mockMvc.perform(post("/api/v1/guests"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.guestId").value(first.toString()))
+            .andReturn().response.contentAsString
+            .let { objectMapper.readTree(it).path("data").path("guestId").asString() }
 
-        mockMvc.perform(post("/api/v1/guests"))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.guestId").value(second.toString()))
+        assertNotEquals(first, second)
     }
 }

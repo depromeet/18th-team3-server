@@ -4,6 +4,9 @@ spring:
   config:
     import: optional:file:.env.test[.properties]
 
+# 컨텍스트 로딩만 통과시키기 위한 더미 fallback. 실제 Gemini 호출 테스트는 @Disabled 또는
+# @EnabledIfEnvironmentVariable 로 별도 격리되어 있으므로 CI 에서 GEMINI_API_KEY 가 없어도
+# 컨텍스트 로딩 자체는 깨지지 않는다.
 gemini:
-  api-key: ${GEMINI_API_KEY}
-  model: gemini-3-flash-preview
+  api-key: ${GEMINI_API_KEY:test-dummy-key}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}

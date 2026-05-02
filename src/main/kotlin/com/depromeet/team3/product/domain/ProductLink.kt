@@ -5,6 +5,9 @@ import java.net.URI
 class ProductLink private constructor(val value: URI) {
     override fun toString(): String = value.toString()
 
+    // 로그/메트릭용. 쿼리스트링·fragment 에 토큰/세션이 섞일 수 있어 host+path 만 노출한다.
+    fun safeLogString(): String = "${value.host ?: "?"}${value.rawPath ?: ""}"
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ProductLink) return false

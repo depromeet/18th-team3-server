@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "gemini")
 data class GeminiProperties(
     val apiKey: String,
-    val model: String = "gemini-3-flash-preview",
+    val model: String = "gemini-2.5-flash",
 ) {
     init {
         require(apiKey.isNotBlank()) { "GEMINI_API_KEY 가 비어 있습니다." }
