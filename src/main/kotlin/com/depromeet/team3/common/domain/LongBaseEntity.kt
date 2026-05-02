@@ -13,5 +13,5 @@ abstract class LongBaseEntity : BaseEntity<Long>() {
     @Column(name = "id")
     private var id: Long? = null
 
-    override fun getId(): Long = requireNotNull(id)
+    override fun getIdOrNull(): Long? = id
 }

@@ -20,10 +20,10 @@ data class ApiResponseBody<T>(
         fun <T> created(data: T? = null): ApiResponseBody<T> =
             success(HttpStatus.CREATED, data)
 
-        fun <T> noContent(): ApiResponse<T> = ApiResponse(
+        fun <T> noContent(): ApiResponseBody<T> = ApiResponseBody(
             status = HttpStatus.NO_CONTENT.value(),
             data = null,
-            detail = "요청이 정상적으로 처리되었습니다.",
+            detail = "처리가 완료되었습니다.",
             code = "NO_CONTENT",
         )
 
