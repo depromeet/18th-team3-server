@@ -1,12 +1,15 @@
 package com.depromeet.team3.tournament.service
 
 import com.depromeet.team3.common.domain.LongBaseEntity
+import com.depromeet.team3.product.domain.ProductLink
 import com.depromeet.team3.tournament.domain.Tournament
 import com.depromeet.team3.tournament.domain.TournamentHistory
 import com.depromeet.team3.tournament.domain.TournamentStatus
 import com.depromeet.team3.tournament.repository.TournamentRepository
 import com.depromeet.team3.tournament.service.dto.RecordMatch
 import com.depromeet.team3.tournament.service.dto.StartTournament
+import com.depromeet.team3.wishlist.domain.Wish
+import com.depromeet.team3.wishlist.repository.WishRepository
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -14,6 +17,15 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class TournamentServiceTest {
+
+    private class TestWishRepository(
+        private val allOwned: Boolean = true,
+    ) : WishRepository {
+        override fun save(wish: Wish): Wish = wish
+        override fun existsByGuestIdAndProductLink(guestId: UUID, link: ProductLink): Boolean = false
+        override fun countByIdsAndGuestId(ids: List<Long>, guestId: UUID): Long =
+            if (allOwned) ids.size.toLong() else 0L
+    }
 
     private class TestTournamentRepository : TournamentRepository {
         private var idSeq = 1L
@@ -44,7 +56,8 @@ class TournamentServiceTest {
     }
 
     private val repository = TestTournamentRepository()
-    private val service = TournamentService(repository)
+    private val wishRepository = TestWishRepository()
+    private val service = TournamentService(repository, wishRepository)
     private val userId = UUID.randomUUID()
     private val otherUserId = UUID.randomUUID()
 
@@ -200,6 +213,15 @@ class TournamentServiceTest {
 
         assertFailsWith<TournamentException> {
             service.getTournamentById(tournamentId, otherUserId)
+        }
+    }
+
+    @Test
+    fun `start 에서 위시 아이템이 요청자의 것이 아니면 예외가 발생한다`() {
+        val serviceWithNoOwnership = TournamentService(repository, TestWishRepository(allOwned = false))
+
+        assertFailsWith<TournamentException> {
+            serviceWithNoOwnership.start(userId, StartTournament("토너먼트", round = 4, wishItemIds = (1L..4L).toList()))
         }
     }
 }

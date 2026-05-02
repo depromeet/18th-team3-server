@@ -13,4 +13,7 @@ class WishRepositoryImpl(
 
     override fun existsByGuestIdAndProductLink(guestId: UUID, link: ProductLink): Boolean =
         wishJpaRepository.existsByGuestIdAndProductLink(guestId, link)
+
+    override fun countByIdsAndGuestId(ids: List<Long>, guestId: UUID): Long =
+        wishJpaRepository.countByIdInAndGuestId(ids, guestId)
 }

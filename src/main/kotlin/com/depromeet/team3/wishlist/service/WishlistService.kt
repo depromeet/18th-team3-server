@@ -25,7 +25,7 @@ class WishlistService(
 
         // dedup 검사를 추출 전에 먼저 — 중복이면 LLM 호출 비용 자체를 회피.
         if (wishRepository.existsByGuestIdAndProductLink(guestId, link)) {
-            throw WishAlreadyExistsException(guestId = guestId, link = link)
+            throw WishException.alreadyExists(guestId = guestId, link = link)
         }
 
         val product = extractWithLatencyLog(link)
