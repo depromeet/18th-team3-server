@@ -180,3 +180,18 @@ race · 동시성 · timeout 처럼 일반 통합 테스트 패턴(`@Transaction
 - 데이터 격리는 자기가 만든 행을 메서드 끝에서 명시적으로 정리하거나, 매 테스트가 격리된 식별자(예: 새 `UUID guestId`)를 사용한다.
 - 동시 호출 시뮬레이션은 `ExecutorService` + `CountDownLatch` 로 동시 출발을 강제한다. `Thread.sleep()` 으로 타이밍을 맞추지 않는다.
 - timeout 검증은 JUnit `@Timeout` 또는 Awaitility 를 사용한다. wall clock 비교(`System.currentTimeMillis()` 차이) 금지.
+
+## 컨트롤러 / OpenAPI 문서
+
+**컨트롤러는 `*Api` 인터페이스를 구현한다.** OpenAPI 어노테이션은 인터페이스, 매핑/검증 어노테이션은 구현체로 분리한다. example 은 평문 JSON 으로 박지 않고 `*ApiExamples` 의 `OperationCustomizer` 빈으로 객체화한다.
+
+### 규칙
+- **인터페이스 (`*Api.kt`)**: `@Tag`, `@Operation`, `@ApiResponse(s)`, `@Schema` 만 둔다. 메서드 시그니처는 평범한 함수 (`@PostMapping` 등 매핑 어노테이션 / `@RequestBody` 등 파라미터 어노테이션 / `@Valid` / `@ResponseStatus` 모두 두지 않는다).
+- **구현체 (`*Controller.kt`)**: `@RestController`, `@RequestMapping`, 메서드별 `@PostMapping` / `@GetMapping`, 파라미터 어노테이션, `@ResponseStatus` 를 둔다. 라우팅이 컨트롤러만 보면 한눈에 드러나야 한다.
+- **example (`*ApiExamples.kt`)**: `@Configuration` + `OperationCustomizer` 빈. 핸들러 매칭은 `HandlerMethod.binds(Controller::method)` (method reference), 응답 코드는 `HttpStatus` enum. path / status 매직 스트링 금지.
+- example payload 는 실제 DTO 인스턴스를 만들어 `ApiResponseBody.ok/created/fail` 로 감싸 넘긴다. `@ExampleObject(value = "...JSON 평문...")` 형태 금지 — DTO 시그니처 변경이 컴파일로 추적되지 않는다.
+- 새 엔드포인트 추가 / 시그니처 변경 시 인터페이스 + example 빈을 함께 갱신한다. 한쪽만 바꾸면 OpenAPI 문서가 실제 응답과 어긋난다.
+
+### 이유
+- 라우팅(컨트롤러)과 contract(인터페이스)의 관심사를 분리해 컨트롤러가 REST 본질에 집중하게 만든다.
+- example 객체화로 DTO 변경이 휴먼 에러로 example 만 어긋나는 함정을 차단한다.
