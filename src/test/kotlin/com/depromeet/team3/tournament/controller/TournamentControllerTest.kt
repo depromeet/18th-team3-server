@@ -52,13 +52,13 @@ class TournamentControllerTest {
                     """{"name":"테스트 토너먼트","round":8,"wishItemIds":[1,2,3,4,5,6,7,8]}""",
                 ),
         )
-            .andExpect(status().isOk)
+            .andExpect(status().isCreated)
             .andExpect(jsonPath("$.data.tournamentId").value(1))
             .andExpect(jsonPath("$.status").value(201))
     }
 
     @Test
-    fun `POST tournaments tournamentId matches 는 매치를 기록하고 200 을 응답한다`() {
+    fun `POST tournaments tournamentId matches 는 매치를 기록하고 204 를 응답한다`() {
         val expectedRecordMatch = RecordMatch(
             tournamentId = 1L,
             currentRound = 4,
@@ -75,7 +75,7 @@ class TournamentControllerTest {
                     """{"currentRound":4,"firstWishItemId":10,"secondWishItemId":20,"winnerWishItemId":10}""",
                 ),
         )
-            .andExpect(status().isOk)
+            .andExpect(status().isNoContent)
 
         then(tournamentService).should().recordMatch(userId, expectedRecordMatch)
     }

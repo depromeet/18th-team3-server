@@ -46,7 +46,7 @@ interface TournamentApi {
         userId: UUID,
         tournamentId: Long,
         request: RecordMatchRequest,
-    ): ApiResponseBody<Unit>
+    )
 
     @Operation(
         summary = "토너먼트 조회",
