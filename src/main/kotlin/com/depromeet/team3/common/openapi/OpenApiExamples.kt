@@ -13,7 +13,9 @@ import org.springframework.http.MediaType as SpringMediaType
 
 fun HandlerMethod.binds(ref: KFunction<*>): Boolean {
     val target = ref.javaMethod ?: return false
-    return method.name == target.name && method.parameterTypes.contentEquals(target.parameterTypes)
+    return method.declaringClass == target.declaringClass &&
+        method.name == target.name &&
+        method.parameterTypes.contentEquals(target.parameterTypes)
 }
 
 fun Operation.examples(objectMapper: ObjectMapper, block: OperationExamples.() -> Unit) {
