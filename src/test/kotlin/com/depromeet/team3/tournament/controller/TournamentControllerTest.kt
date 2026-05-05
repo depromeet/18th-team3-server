@@ -58,7 +58,7 @@ class TournamentControllerTest {
     }
 
     @Test
-    fun `POST tournaments tournamentId matches 는 매치를 기록하고 204 를 응답한다`() {
+    fun `POST tournaments tournamentId matches 는 매치를 기록하고 200 을 응답한다`() {
         val expectedRecordMatch = RecordMatch(
             tournamentId = 1L,
             currentRound = 4,
@@ -75,7 +75,7 @@ class TournamentControllerTest {
                     """{"currentRound":4,"firstWishItemId":10,"secondWishItemId":20,"winnerWishItemId":10}""",
                 ),
         )
-            .andExpect(status().isNoContent)
+            .andExpect(status().isOk)
 
         then(tournamentService).should().recordMatch(userId, expectedRecordMatch)
     }

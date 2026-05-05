@@ -34,13 +34,13 @@ class TournamentController(
     }
 
     @PostMapping("/{tournamentId}/matches")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     override fun recordMatch(
         @RequestHeader("X-User-Id") userId: UUID,
         @PathVariable tournamentId: Long,
         @RequestBody @Valid request: RecordMatchRequest,
-    ) {
+    ): ApiResponseBody<Unit> {
         tournamentService.recordMatch(userId, request.toRecordMatch(tournamentId))
+        return ApiResponseBody.ok()
     }
 
     @GetMapping("/{tournamentId}")

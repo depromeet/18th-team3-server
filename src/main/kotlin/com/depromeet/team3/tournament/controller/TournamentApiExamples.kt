@@ -26,6 +26,14 @@ class TournamentApiExamples(private val openApiObjectMapper: OpenApiObjectMapper
                 )
             }
 
+            handlerMethod.binds(TournamentController::recordMatch) -> operation.examples(openApiObjectMapper.delegate) {
+                add(
+                    status = HttpStatus.OK,
+                    name = "기록 성공",
+                    payload = ApiResponseBody.ok<Unit>(),
+                )
+            }
+
             handlerMethod.binds(TournamentController::getTournamentById) -> operation.examples(openApiObjectMapper.delegate) {
                 add(
                     status = HttpStatus.OK,

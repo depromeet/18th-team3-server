@@ -39,14 +39,20 @@ interface TournamentApi {
         description = "토너먼트의 한 라운드 매치 결과(승자)를 기록한다.",
     )
     @ApiResponse(
-        responseCode = "204",
+        responseCode = "200",
         description = "매치 결과 기록 성공",
+        content = [
+            Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = Schema(implementation = ApiResponseBody::class),
+            ),
+        ],
     )
     fun recordMatch(
         userId: UUID,
         tournamentId: Long,
         request: RecordMatchRequest,
-    )
+    ): ApiResponseBody<Unit>
 
     @Operation(
         summary = "토너먼트 조회",
